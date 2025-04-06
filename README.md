@@ -10,3 +10,6 @@ SethBling's [original survival map](https://www.youtube.com/watch?v=5dhs3ithXDA)
 * Locally savable custom presets.
 * Core of mod is **server side** - clients do not need the mod to connect to servers running SkyGrid worlds.
 * Partial support for modded blocks.
+
+<img src="images/slideshow1.gif" width="100%" />
+<img src="images/slideshow2.gif" width="100%" />
