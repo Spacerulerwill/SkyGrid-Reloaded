@@ -1,4 +1,9 @@
-# 1.0.0-1.21.4 - 06/04/25 - Initial Release
+# 1.0.0-1.21.5 - 07/04/25
+
+* Ported to 1.21.5
+* Added 1.21.5 blocks to the **Modern** preset
+
+# 1.0.0-1.21.4 - 07/04/25 - Initial Release
 
 * Added SkyGrid world preset with:
     * Customizable block weightings
