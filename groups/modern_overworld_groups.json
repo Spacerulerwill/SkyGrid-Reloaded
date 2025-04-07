@@ -197,7 +197,9 @@
     "total": 3,
     "items": [
       "minecraft:dead_bush",
-      "minecraft:sweet_berry_bush"
+      "minecraft:sweet_berry_bush",
+      "minecraft:bush",
+      "minecraft:firefly_bush"
     ]
   },
   {
@@ -240,7 +242,9 @@
       "minecraft:sunflower",
       "minecraft:lilac",
       "minecraft:rose_bush",
-      "minecraft:peony"
+      "minecraft:peony",
+      "minecraft:cactus_flower",
+      "minecraft:wildflowers"
     ]
   },
   {
