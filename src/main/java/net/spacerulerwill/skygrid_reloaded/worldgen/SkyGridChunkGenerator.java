@@ -16,6 +16,7 @@ import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.block.entity.MobSpawnerBlockEntity;
 import net.minecraft.block.entity.TrappedChestBlockEntity;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.InstrumentComponent;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityType;
@@ -185,7 +186,8 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                     itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(Registries.POTION.getRandom(random).get()));
                 } else if (item.equals(Items.GOAT_HORN)) {
                     Registry<Instrument> instrumentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.INSTRUMENT);
-                    itemStack.set(DataComponentTypes.INSTRUMENT, instrumentRegistry.getRandom(random).get());
+                    RegistryEntry.Reference<Instrument> instrument = instrumentRegistry.getRandom(random).get();
+                    itemStack.set(DataComponentTypes.INSTRUMENT, new InstrumentComponent(instrument));
                 } else if (item.equals(Items.ENCHANTED_BOOK)) {
                     // always have 1 enchantment at least
                     Registry<Enchantment> enchantmentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
@@ -222,7 +224,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                     BlockPos blockPos = new BlockPos(x, y, z);
                     Block block = blockProbabilities.sample();
                     BlockState state = block.getDefaultState().withIfExists(Properties.PERSISTENT, true);
-                    chunk.setBlockState(blockPos, state, false);
+                    chunk.setBlockState(blockPos, state);
                     if (block.equals(Blocks.SPAWNER) && !this.entities.isEmpty()) {
                         MobSpawnerBlockEntity mobSpawnerBlockEntity = new MobSpawnerBlockEntity(new BlockPos(worldX, y, worldZ), state);
                         mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities().size())), random);
@@ -260,22 +262,22 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
         // End portal placement
         if (chunk.getPos().x == 0 && chunk.getPos().z == 0) {
-            chunk.setBlockState(new BlockPos(0, -64, 0), Blocks.AIR.getDefaultState(), false);
-            chunk.setBlockState(new BlockPos(2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST), false);  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(0, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH), false); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST), false); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH), false);  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, 0), Blocks.AIR.getDefaultState());
+            chunk.setBlockState(new BlockPos(2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == -1 && chunk.getPos().z == 0) {
-            chunk.setBlockState(new BlockPos(-2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST), false);   // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST), false);  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH), false);  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));   // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == 0 && chunk.getPos().z == -1) {
-            chunk.setBlockState(new BlockPos(0, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH), false); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH), false);  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST), false); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == -1 && chunk.getPos().z == -1) {
-            chunk.setBlockState(new BlockPos(-2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST), false);  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH), false);   // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH));   // Face towards center (1, -64, 1)
         }
 
 

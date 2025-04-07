@@ -219,7 +219,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         }
 
         @Environment(EnvType.CLIENT)
-        public static class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
+        public static class Entry extends AlwaysSelectedEntryListWidget.Entry<net.spacerulerwill.skygrid_reloaded.ui.screen.DimensionSpecificCustomizableListWidgetScreen.AutocompleteListWidget.Entry> {
             public final String valueText;
             @Nullable
             private final Item iconItem;
