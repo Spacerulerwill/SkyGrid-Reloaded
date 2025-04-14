@@ -10,7 +10,7 @@ public class RenderUtils {
     private static final Identifier SLOT_TEXTURE = Identifier.ofVanilla("container/slot");
 
     private static void renderIconBackgroundTexture(DrawContext context, int x, int y) {
-        context.drawGuiTexture(RenderLayer::getGuiTextured, SLOT_TEXTURE, x, y, 0, 18, 18);
+        context.drawGuiTexture(SLOT_TEXTURE, x, y, 0, 18, 18);
     }
 
     public static void renderItemIcon(Item item, DrawContext context, int x, int y) {

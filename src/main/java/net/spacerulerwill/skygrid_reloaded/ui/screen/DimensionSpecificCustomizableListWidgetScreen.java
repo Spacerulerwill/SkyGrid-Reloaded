@@ -77,7 +77,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         row1.add(ButtonWidget.builder(CLEAR_TEXT, (button -> {
             this.onClear();
             this.listWidget.clearEntries();
-            this.listWidget.setScrollY(0.0);
+            this.listWidget.setScrollAmount(0.0);
         })).width(75).build());
         // Row 2 - Dimension selector and Delete button
         DirectionalLayoutWidget row2 = DirectionalLayoutWidget.horizontal().spacing(8);
@@ -145,7 +145,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
 
     private void regenerateListEntries() {
         this.listWidget.replaceEntries(this.getEntriesFromConfig());
-        this.listWidget.setScrollY(0.0);
+        this.listWidget.setScrollAmount(0.0);
     }
 
     private void updateAddButtonActive() {
@@ -211,13 +211,6 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             }
         }
 
-        @Override
-        public void setSelected(int index) {
-            super.setSelected(index);
-            AutocompleteListWidget.Entry entry = this.getEntry(index);
-            this.parent.textField.setText(entry.valueText);
-        }
-
         @Environment(EnvType.CLIENT)
         public static class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
             public final String valueText;
@@ -259,12 +252,6 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         @Override
         public void setSelected(@Nullable T entry) {
             super.setSelected(entry);
-            DimensionSpecificCustomizableListWidgetScreen.this.updateDeleteButtonActive();
-        }
-
-        @Override
-        public void setSelected(int index) {
-            super.setSelected(index);
             DimensionSpecificCustomizableListWidgetScreen.this.updateDeleteButtonActive();
         }
     }

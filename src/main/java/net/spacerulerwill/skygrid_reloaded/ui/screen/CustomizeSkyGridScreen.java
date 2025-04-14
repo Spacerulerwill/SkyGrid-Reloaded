@@ -47,6 +47,7 @@ public class CustomizeSkyGridScreen extends Screen {
     private final CreateWorldScreen parent;
     private ClickableWidgetList body;
     private SkyGridConfig currentConfig = new SkyGridConfig(SkyGridReloaded.DEFAULT_PRESET.config());
+    private boolean initialised = false;
 
 
     public CustomizeSkyGridScreen(CreateWorldScreen parent) {
@@ -57,45 +58,48 @@ public class CustomizeSkyGridScreen extends Screen {
     @Override
     protected void init() {
         // Header for title
-        this.layout.addHeader(TITLE_TEXT, this.textRenderer);
-        // Body
-        List<ClickableWidget> firstRow = List.of(
-                ButtonWidget.builder(BLOCKS_TEXT, (button) -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new CustomizeBlocksScreen(this, this.currentConfig));
-                    }
-                }).build(),
-                ButtonWidget.builder(SPAWNERS_TEXT, (button) -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new CustomizeSpawnerScreen(this, this.currentConfig));
-                    }
-                }).build()
-        );
-        List<ClickableWidget> secondRow = List.of(
-                ButtonWidget.builder(LOOT_TEXT, (button) -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new CustomizeLootScreen(this, this.currentConfig));
-                    }
-                }).build(),
-                ButtonWidget.builder(PRESETS_TEXT, (button) -> {
-                    if (this.client != null) {
-                        this.client.setScreen(new SkyGridPresetsScreen(this.client, this));
-                    }
-                }).build()
-        );
-        List<List<ClickableWidget>> rows = List.of(firstRow, secondRow);
-        this.body = this.layout.addBody(new ClickableWidgetList(this.client, rows, this.width, this.layout.getContentHeight(), this.layout.getHeaderHeight()));
-        // Footer
-        DirectionalLayoutWidget footerRow = DirectionalLayoutWidget.horizontal().spacing(8);
-        footerRow.add(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
-            this.done();
-            this.close();
-        }).build());
-        footerRow.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
-            this.done();
-            this.close();
-        }).build());
-        this.layout.addFooter(footerRow);
+        if (!this.initialised) {
+            this.layout.addHeader(TITLE_TEXT, this.textRenderer);
+            // Body
+            List<ClickableWidget> firstRow = List.of(
+                    ButtonWidget.builder(BLOCKS_TEXT, (button) -> {
+                        if (this.client != null) {
+                            this.client.setScreen(new CustomizeBlocksScreen(this, this.currentConfig));
+                        }
+                    }).build(),
+                    ButtonWidget.builder(SPAWNERS_TEXT, (button) -> {
+                        if (this.client != null) {
+                            this.client.setScreen(new CustomizeSpawnerScreen(this, this.currentConfig));
+                        }
+                    }).build()
+            );
+            List<ClickableWidget> secondRow = List.of(
+                    ButtonWidget.builder(LOOT_TEXT, (button) -> {
+                        if (this.client != null) {
+                            this.client.setScreen(new CustomizeLootScreen(this, this.currentConfig));
+                        }
+                    }).build(),
+                    ButtonWidget.builder(PRESETS_TEXT, (button) -> {
+                        if (this.client != null) {
+                            this.client.setScreen(new SkyGridPresetsScreen(this.client, this));
+                        }
+                    }).build()
+            );
+            List<List<ClickableWidget>> rows = List.of(firstRow, secondRow);
+            this.body = this.layout.addBody(new ClickableWidgetList(this.client, rows, this.width, this.layout.getContentHeight(), this.layout.getHeaderHeight()));
+            // Footer
+            DirectionalLayoutWidget footerRow = DirectionalLayoutWidget.horizontal().spacing(8);
+            footerRow.add(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
+                this.done();
+                this.close();
+            }).build());
+            footerRow.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
+                this.done();
+                this.close();
+            }).build());
+            this.layout.addFooter(footerRow);
+            this.initialised = true;
+        }
         this.layout.forEachChild(this::addDrawableChild);
         this.refreshWidgetPositions();
     }
@@ -131,7 +135,7 @@ public class CustomizeSkyGridScreen extends Screen {
         );
 
         return (dynamicRegistryManager, dimensionsRegistryHolder) -> {
-            Registry<Biome> biomeRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.BIOME);
+            Registry<Biome> biomeRegistry = dynamicRegistryManager.get(RegistryKeys.BIOME);
             Biome biome = biomeRegistry.get(BiomeKeys.THE_VOID);
             RegistryEntry<Biome> biomeEntry = biomeRegistry.getEntry(biome);
             Map<RegistryKey<DimensionOptions>, DimensionOptions> updatedDimensions = new HashMap<>(dimensionsRegistryHolder.dimensions());
@@ -152,14 +156,14 @@ public class CustomizeSkyGridScreen extends Screen {
                     been overwritten by our world preset json
                      */
                     if (dimensionOptionsRegistryKey == DimensionOptions.OVERWORLD) {
-                        DimensionOptions defaultOverworld = (dynamicRegistryManager.getOrThrow(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT)).getOverworld().orElseThrow();
+                        DimensionOptions defaultOverworld = (dynamicRegistryManager.get(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT)).getOverworld().orElseThrow();
                         updatedDimensions.put(dimensionOptionsRegistryKey, defaultOverworld);
                     } else if (dimensionOptionsRegistryKey == DimensionOptions.NETHER) {
-                        WorldPreset preset = (dynamicRegistryManager.getOrThrow(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT));
+                        WorldPreset preset = (dynamicRegistryManager.get(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT));
                         DimensionOptions defaultNether = ((WorldPresetExtension) preset).skygrid$GetNether().orElseThrow();
                         updatedDimensions.put(dimensionOptionsRegistryKey, defaultNether);
                     } else if (dimensionOptionsRegistryKey == DimensionOptions.END) {
-                        WorldPreset preset = (dynamicRegistryManager.getOrThrow(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT));
+                        WorldPreset preset = (dynamicRegistryManager.get(RegistryKeys.WORLD_PRESET).get(WorldPresets.DEFAULT));
                         DimensionOptions defaultEnd = ((WorldPresetExtension) preset).skygrid$GetEnd().orElseThrow();
                         updatedDimensions.put(dimensionOptionsRegistryKey, defaultEnd);
                     }

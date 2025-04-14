@@ -43,6 +43,7 @@ import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
@@ -113,7 +114,8 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk) {
+    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk, GenerationStep.Carver carverStep) {
+
     }
 
     public SkyGridChunkGeneratorConfig getConfig() {
@@ -133,10 +135,6 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     @Override
     public void populateEntities(ChunkRegion region) {
-    }
-
-    @Override
-    public void appendDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
     }
 
     /*
@@ -184,11 +182,11 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                 if (item instanceof PotionItem || item.equals(Items.TIPPED_ARROW) || item.equals(Items.SUSPICIOUS_STEW)) {
                     itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(Registries.POTION.getRandom(random).get()));
                 } else if (item.equals(Items.GOAT_HORN)) {
-                    Registry<Instrument> instrumentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.INSTRUMENT);
+                    Registry<Instrument> instrumentRegistry = dynamicRegistryManager.get(RegistryKeys.INSTRUMENT);
                     itemStack.set(DataComponentTypes.INSTRUMENT, instrumentRegistry.getRandom(random).get());
                 } else if (item.equals(Items.ENCHANTED_BOOK)) {
                     // always have 1 enchantment at least
-                    Registry<Enchantment> enchantmentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
+                    Registry<Enchantment> enchantmentRegistry = dynamicRegistryManager.get(RegistryKeys.ENCHANTMENT);
                     float chance = 1.0f;
                     for (int j = 0; j < MAX_BOOK_ENCHANTS; j++) {
                         if (random.nextFloat() < chance) {
@@ -292,5 +290,10 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
             states[(y - getMinimumY()) / 4] = blockProbabilities.sample().getDefaultState();
         }
         return new VerticalBlockSample(getMinimumY(), states);
+    }
+
+    @Override
+    public void getDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+
     }
 }

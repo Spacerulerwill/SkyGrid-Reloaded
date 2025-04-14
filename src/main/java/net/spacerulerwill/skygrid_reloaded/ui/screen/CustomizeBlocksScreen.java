@@ -47,7 +47,7 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     @Override
     protected Optional<Block> getFromTextField(String text) {
         try {
-            return Registries.BLOCK.getOptionalValue(Identifier.of(text));
+            return Registries.BLOCK.getOrEmpty(Identifier.of(text));
         } catch (InvalidIdentifierException e) {
             return Optional.empty();
         }

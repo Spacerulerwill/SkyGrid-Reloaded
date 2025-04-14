@@ -131,7 +131,6 @@
       "minecraft:raw_iron",
       "minecraft:raw_copper",
       "minecraft:raw_gold",
-      "minecraft:resin_clump",
       "minecraft:honeycomb",
       "minecraft:heart_of_the_sea",
       "minecraft:nautilus_shell"
@@ -177,7 +176,6 @@
     "total": 20,
     "items": [
       "minecraft:allay_spawn_egg",
-      "minecraft:creaking_heart",
       "minecraft:axolotl_spawn_egg",
       "minecraft:bat_spawn_egg",
       "minecraft:camel_spawn_egg",

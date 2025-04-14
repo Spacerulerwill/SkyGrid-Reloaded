@@ -57,8 +57,7 @@
     "total": 10,
     "items": [
       "minecraft:gravel",
-      "minecraft:moss_block",
-      "minecraft:pale_moss_block"
+      "minecraft:moss_block"
     ]
   },
   {
@@ -127,8 +126,7 @@
       "minecraft:dark_oak_log",
       "minecraft:jungle_log",
       "minecraft:cherry_log",
-      "minecraft:mangrove_log",
-      "minecraft:pale_oak_log"
+      "minecraft:mangrove_log"
     ]
   },
   {
@@ -141,8 +139,7 @@
       "minecraft:dark_oak_leaves",
       "minecraft:jungle_leaves",
       "minecraft:cherry_leaves",
-      "minecraft:mangrove_leaves",
-      "minecraft:pale_oak_leaves"
+      "minecraft:mangrove_leaves"
     ]
   },
   {

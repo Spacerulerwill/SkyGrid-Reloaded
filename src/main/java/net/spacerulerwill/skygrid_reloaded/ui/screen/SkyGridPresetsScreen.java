@@ -184,7 +184,7 @@ public class SkyGridPresetsScreen extends Screen {
 
             @Override
             public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
+                context.drawGuiTexture(SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
                 context.drawItemWithoutEntity(preset.item().getDefaultStack(), x + 2, y + 2);
                 context.drawText(SkyGridPresetsScreen.this.textRenderer, Text.translatable(preset.name()), x + 18 + 5, y + 3, 16777215, false);
             }
