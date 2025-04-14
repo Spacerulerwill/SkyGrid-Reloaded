@@ -94,7 +94,6 @@ public class CustomizeSkyGridScreen extends Screen {
                 this.close();
             }).build());
             footerRow.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
-                this.done();
                 this.close();
             }).build());
             this.layout.addFooter(footerRow);
