@@ -1,3 +1,7 @@
+# 1.0.1-1.21.5 - 14/04/25
+
+* Fixed bug where cancel button would preserve changes made to config
+
 # 1.0.0-1.21.5 - 07/04/25
 
 * Ported to 1.21.5
