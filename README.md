@@ -1,5 +1,16 @@
 ![Banner](images/banner.png)
 
+
+[modrinth]: https://modrinth.com/mod/skygrid-reloaded
+[curseforge]: https://www.curseforge.com/minecraft/mc-mods/skygrid-reloaded
+
+<div align="center">
+  
+[![Modrinth Downloads](https://img.shields.io/modrinth/dt/L2x7HBGZ?logo=modrinth&label=modrinth&style=for-the-badge)][modrinth]
+[![CurseForge Downloads](https://img.shields.io/curseforge/dt/1243115?logo=curseforge&label=curseforge&style=for-the-badge)][curseforge]
+
+</div>
+
 # About the mod
 
 **SkyGrid Reloaded** is a mod that adds SkyGrid as a world preset. It is Inspired by
