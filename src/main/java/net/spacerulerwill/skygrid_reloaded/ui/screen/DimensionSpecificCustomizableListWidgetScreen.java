@@ -108,6 +108,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             this.updateAddButtonActive();
             this.updateDeleteButtonActive();
             this.textField.setText("");
+            this.listWidget.setScrollY(this.listWidget.getMaxScrollY());
         }).width(75).build());
         rows.add(row3);
         rows.add(row2);
