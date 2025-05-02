@@ -130,6 +130,15 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         this.updateDeleteButtonActive();
     }
 
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Logic for unfocusing the text box if you click off of it
+        if (!this.textField.isMouseOver(mouseX, mouseY) && this.textField.isFocused() && !this.textField.isMouseOverAutocompleteWidget(mouseX, mouseY)) {
+            this.textField.setFocused(false);
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
     protected void refreshWidgetPositions() {
         this.layout.refreshPositions();
         if (this.listWidget != null) {
@@ -274,10 +283,24 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             }
         }
 
-        protected void onTextChanged() {
+        private boolean isMouseOverAutocompleteWidget(double mouseX, double mouseY) {
+            if (this.autocompleteListWidget == null) {
+                return false;
+            } else {
+                return this.autocompleteListWidget.isMouseOver(mouseX, mouseY);
+            }
+        }
+
+        @Override
+        public void setFocused(boolean focused) {
+            super.setFocused(focused);
+            this.doAutocompleteStuff();
+        }
+
+        private void doAutocompleteStuff() {
             DimensionSpecificCustomizableListWidgetScreen.this.updateAddButtonActive();
             List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getText());
-            if (autocompleteResults.isEmpty()) {
+            if (autocompleteResults.isEmpty() || !this.isFocused()) {
                 if (this.autocompleteListWidget != null) {
                     DimensionSpecificCustomizableListWidgetScreen.this.remove(this.autocompleteListWidget);
                     DimensionSpecificCustomizableListWidgetScreen.this.showWidgetsForAutocompleteBox();
@@ -297,6 +320,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
                 }
 
             }
+        }
+
+        protected void onTextChanged() {
+            this.doAutocompleteStuff();
         }
     }
 }
