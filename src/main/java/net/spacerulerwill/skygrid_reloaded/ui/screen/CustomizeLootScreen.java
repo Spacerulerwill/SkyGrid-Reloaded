@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidgetScreen<CustomizeLootScreen.ItemWeightListEntry, Item> {
-    private static final double INITIAL_ITEM_WEIGHT = 1;
+    private static final double INITIAL_ITEM_WEIGHT = 50;
     private static final double MIN_ITEM_WEIGHT = 0;
     private static final double MAX_ITEM_WEIGHT = 100;
 
