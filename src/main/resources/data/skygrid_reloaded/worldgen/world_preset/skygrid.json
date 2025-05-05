@@ -6,7 +6,7 @@
         "type": "skygrid_reloaded:skygrid",
         "biome_source": {
           "type": "minecraft:fixed",
-          "biome": "minecraft:the_void"
+          "biome": "minecraft:plains"
         },
         "settings": {
           "blocks":{
@@ -444,7 +444,7 @@
         "type": "skygrid_reloaded:skygrid",
         "biome_source": {
           "type": "minecraft:fixed",
-          "biome": "minecraft:the_void"
+          "biome": "minecraft:nether_wastes"
         },
         "settings": {
           "blocks":  {
