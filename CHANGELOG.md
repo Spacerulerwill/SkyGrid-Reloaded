@@ -1,3 +1,7 @@
+# 1.1.1-1.21.5 - 06/05/25
+
+* Fixed bug where all dimensions would have the biome `minecraft:the_void` if you  click the "Done" on the SkyGrid customization menu.
+
 # 1.1.0-1.21.5 - 05/05/25
 
 * Adding a new block, item or entity to the lists in their respective menus will auto-scroll you to the bottom.
