@@ -6,6 +6,7 @@
 * Items in the **Customize Loot** menu will now have an initial weight of **50**.
 * Change the biome for The Overworld from `minecraft:the_void` to `minecraft:plains`  so mobs will naturally spawn.
 * Change the biome for The Nether from `minecraft:the_void` to `minecraft:nether_wastes` so mobs will naturally spawn.
+* Fixed bug where all dimensions would have the biome `minecraft:the_void` if you  click the "Done" on the SkyGrid customization menu.
 * Fixed bug where mobs would not naturally spawn in overworld or nether dimensions: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/5)
 * Fixed missing period in mod description.
 * Fixed grammatical errors in README.
