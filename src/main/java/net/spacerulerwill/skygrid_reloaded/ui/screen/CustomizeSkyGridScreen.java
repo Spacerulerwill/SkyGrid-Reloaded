@@ -131,12 +131,20 @@ public class CustomizeSkyGridScreen extends Screen {
 
         return (dynamicRegistryManager, dimensionsRegistryHolder) -> {
             Registry<Biome> biomeRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.BIOME);
-            Biome biome = biomeRegistry.get(BiomeKeys.THE_VOID);
-            RegistryEntry<Biome> biomeEntry = biomeRegistry.getEntry(biome);
             Map<RegistryKey<DimensionOptions>, DimensionOptions> updatedDimensions = new HashMap<>(dimensionsRegistryHolder.dimensions());
             dimensionOptionsToChunkGeneratorConfigMap.forEach((dimensionOptionsRegistryKey, config) -> {
                 boolean hasNonZeroBlock = config.blocks().values().stream().anyMatch(weight -> weight > 0);
                 if (hasNonZeroBlock) {
+                    RegistryEntry<Biome> biomeEntry = null;
+                    if (dimensionOptionsRegistryKey == DimensionOptions.OVERWORLD) {
+                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.PLAINS));
+                    }
+                    else if (dimensionOptionsRegistryKey == DimensionOptions.NETHER) {
+                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.NETHER_WASTES));
+                    }
+                    else if (dimensionOptionsRegistryKey == DimensionOptions.END) {
+                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.THE_END));
+                    }
                     ChunkGenerator chunkGenerator = new SkyGridChunkGenerator(new FixedBiomeSource(biomeEntry), config);
                     DimensionOptions dimensionOptions = parent.getWorldCreator().getGeneratorOptionsHolder().selectedDimensions().dimensions().get(dimensionOptionsRegistryKey);
 
