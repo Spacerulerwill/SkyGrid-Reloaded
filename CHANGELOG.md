@@ -1,3 +1,5 @@
+* Fixed bug where not all blocks that need tile entities have them after generation: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/8)
+
 # 1.1.1-1.21.5 - 06/05/25
 
 * Fixed bug where all dimensions would have the biome `minecraft:the_void` if you  click the "Done" on the SkyGrid customization menu.
