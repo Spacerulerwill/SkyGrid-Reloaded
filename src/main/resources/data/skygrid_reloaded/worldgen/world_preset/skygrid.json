@@ -8,7 +8,8 @@
           "type": "minecraft:fixed",
           "biome": "minecraft:plains"
         },
-        "settings": {
+        "settings": "minecraft:overworld",
+        "skygrid_settings": {
           "blocks":{
             "minecraft:stone": 277.77777777777777,
             "minecraft:cobblestone": 277.77777777777777,
@@ -442,7 +443,8 @@
           "type": "minecraft:fixed",
           "biome": "minecraft:nether_wastes"
         },
-        "settings": {
+        "settings": "minecraft:nether",
+        "skygrid_settings": {
           "blocks":  {
             "minecraft:lava": 125.0,
             "minecraft:magma_block": 125.0,
