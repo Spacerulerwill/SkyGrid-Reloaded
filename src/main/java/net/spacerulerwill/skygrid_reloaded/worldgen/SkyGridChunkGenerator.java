@@ -3,18 +3,13 @@ package net.spacerulerwill.skygrid_reloaded.worldgen;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.BrushableBlock;
-import net.minecraft.block.entity.BarrelBlockEntity;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BrushableBlockEntity;
-import net.minecraft.block.entity.ChestBlockEntity;
-import net.minecraft.block.entity.DecoratedPotBlockEntity;
-import net.minecraft.block.entity.EnchantingTableBlockEntity;
-import net.minecraft.block.entity.EnderChestBlockEntity;
 import net.minecraft.block.entity.LootableContainerBlockEntity;
 import net.minecraft.block.entity.MobSpawnerBlockEntity;
-import net.minecraft.block.entity.TrappedChestBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -169,10 +164,10 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     private void fillChestBlockEntityWithItems(LootableContainerBlockEntity blockEntity, Random random, DynamicRegistryManager dynamicRegistryManager) {
         if (this.chestItemProbabilities != null) {
             // How many items for chest
-            int numItems = random.nextBetween(2, 5);
+            int numItems = Math.clamp(random.nextBetween(2, 5), 0, blockEntity.size());
             // Generate 26 numbers and shuffle them
             ArrayList<Integer> slots = new ArrayList<>();
-            for (int i = 0; i <= 26; i++) {
+            for (int i = 0; i < blockEntity.size(); i++) {
                 slots.add(i);
             }
             Collections.shuffle(slots);
@@ -223,35 +218,17 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                     Block block = blockProbabilities.sample();
                     BlockState state = block.getDefaultState().withIfExists(Properties.PERSISTENT, true);
                     chunk.setBlockState(blockPos, state, false);
-                    if (block.equals(Blocks.SPAWNER) && !this.entities.isEmpty()) {
-                        MobSpawnerBlockEntity mobSpawnerBlockEntity = new MobSpawnerBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities().size())), random);
-                        chunk.setBlockEntity(mobSpawnerBlockEntity);
-                    } else if (block.equals(Blocks.CHEST)) {
-                        LootableContainerBlockEntity chestBlockEntity = new ChestBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(chestBlockEntity);
-                        fillChestBlockEntityWithItems(chestBlockEntity, random, dynamicRegistryManager);
-                    } else if (block.equals(Blocks.BARREL)) {
-                        LootableContainerBlockEntity barrelBlockEntity = new BarrelBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(barrelBlockEntity);
-                        fillChestBlockEntityWithItems(barrelBlockEntity, random, dynamicRegistryManager);
-                    } else if (block.equals(Blocks.ENDER_CHEST)) {
-                        EnderChestBlockEntity enderChestBlockEntity = new EnderChestBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(enderChestBlockEntity);
-                    } else if (block.equals(Blocks.TRAPPED_CHEST)) {
-                        LootableContainerBlockEntity trappedChestBlockEntity = new TrappedChestBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(trappedChestBlockEntity);
-                        fillChestBlockEntityWithItems(trappedChestBlockEntity, random, dynamicRegistryManager);
-                    } else if (block.equals(Blocks.ENCHANTING_TABLE)) {
-                        EnchantingTableBlockEntity enchantingTableBlockEntity = new EnchantingTableBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(enchantingTableBlockEntity);
-                    } else if (block.equals(Blocks.DECORATED_POT)) {
-                        DecoratedPotBlockEntity blockEntity = new DecoratedPotBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        chunk.setBlockEntity(blockEntity);
-                    } else if (block instanceof BrushableBlock) {
-                        BrushableBlockEntity blockEntity = new BrushableBlockEntity(new BlockPos(worldX, y, worldZ), state);
-                        int lootTabelIndex = random.nextBetween(0, ARCHEOLOGY_LOOT_TABLES.size() - 1);
-                        blockEntity.setLootTable(ARCHEOLOGY_LOOT_TABLES.get(lootTabelIndex), random.nextInt());
+                    if (block instanceof BlockEntityProvider provider) {
+                        BlockPos blockEntityPos = new BlockPos(worldX, y, worldZ);
+                        BlockEntity blockEntity = provider.createBlockEntity(blockEntityPos, state);
+                        if (blockEntity instanceof LootableContainerBlockEntity lootableContainerBlockEntity) {
+                            fillChestBlockEntityWithItems(lootableContainerBlockEntity, random, dynamicRegistryManager);
+                        } else if (blockEntity instanceof MobSpawnerBlockEntity mobSpawnerBlockEntity && !this.entities.isEmpty()) {
+                            mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities().size())), random);
+                        } else if (blockEntity instanceof BrushableBlockEntity brushableBlockEntity) {
+                            int lootTableIndex = random.nextBetween(0, ARCHEOLOGY_LOOT_TABLES.size() - 1);
+                            brushableBlockEntity.setLootTable(ARCHEOLOGY_LOOT_TABLES.get(lootTableIndex), random.nextInt());
+                        }
                         chunk.setBlockEntity(blockEntity);
                     }
                 }
