@@ -1,5 +1,5 @@
-* Fixed bug where not all blocks that need tile entities have them after
-  generation: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/8)
+* Fixed bug where chunk generator would attempt to place blocks too high and too low in The End and The Nether: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/6)
+* Fixed bug where not all blocks that need tile entities have them after generation: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/8)
 
 # 1.1.0-1.21.1 - 06/05/25
 

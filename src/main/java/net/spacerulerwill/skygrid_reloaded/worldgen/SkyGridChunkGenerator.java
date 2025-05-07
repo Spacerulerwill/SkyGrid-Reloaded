@@ -42,6 +42,7 @@ import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import net.minecraft.world.gen.noise.NoiseConfig;
 import net.spacerulerwill.skygrid_reloaded.util.MinecraftRandomAdapter;
@@ -58,7 +59,8 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("biome_source").forGetter(SkyGridChunkGenerator::getBiomeSource),
-                    SkyGridChunkGeneratorConfig.CODEC.fieldOf("settings").forGetter(SkyGridChunkGenerator::getConfig)
+                    ChunkGeneratorSettings.REGISTRY_CODEC.fieldOf("settings").forGetter((generator) -> generator.settings),
+                    SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
             ).apply(instance, SkyGridChunkGenerator::new)
     );
 
@@ -75,12 +77,14 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     private final SkyGridChunkGeneratorConfig config;
     private final List<EntityType<?>> entities;
+    private final RegistryEntry<ChunkGeneratorSettings> settings;
     private DiscreteProbabilityCollectionSampler<Block> blockProbabilities;
     private DiscreteProbabilityCollectionSampler<Item> chestItemProbabilities;
 
 
-    public SkyGridChunkGenerator(BiomeSource biomeSource, SkyGridChunkGeneratorConfig config) {
+    public SkyGridChunkGenerator(BiomeSource biomeSource, RegistryEntry<ChunkGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
         super(biomeSource);
+        this.settings = settings;
         this.config = config;
         this.blockProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.blocks());
 
@@ -144,7 +148,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     // Max world height, how many blocks high from minimumY the chunks generate
     @Override
     public int getWorldHeight() {
-        return 384;
+        return this.settings.value().generationShapeConfig().height();
     }
 
     // No oceans in skygrid
@@ -156,7 +160,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     // Bottom of the world is here
     @Override
     public int getMinimumY() {
-        return -64;
+        return this.settings.value().generationShapeConfig().minimumY();
     }
 
     private void fillChestBlockEntityWithItems(LootableContainerBlockEntity blockEntity, Random random, DynamicRegistryManager dynamicRegistryManager) {

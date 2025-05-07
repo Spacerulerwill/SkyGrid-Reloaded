@@ -23,6 +23,7 @@ import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.gen.WorldPreset;
 import net.minecraft.world.gen.WorldPresets;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
 import net.spacerulerwill.skygrid_reloaded.SkyGridReloaded;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.ClickableWidgetList;
 import net.spacerulerwill.skygrid_reloaded.util.WorldPresetExtension;
@@ -135,21 +136,26 @@ public class CustomizeSkyGridScreen extends Screen {
 
         return (dynamicRegistryManager, dimensionsRegistryHolder) -> {
             Registry<Biome> biomeRegistry = dynamicRegistryManager.get(RegistryKeys.BIOME);
+            Registry<ChunkGeneratorSettings> chunkGeneratorSettingsRegistry = dynamicRegistryManager.get(RegistryKeys.CHUNK_GENERATOR_SETTINGS);
             Map<RegistryKey<DimensionOptions>, DimensionOptions> updatedDimensions = new HashMap<>(dimensionsRegistryHolder.dimensions());
             dimensionOptionsToChunkGeneratorConfigMap.forEach((dimensionOptionsRegistryKey, config) -> {
                 boolean hasNonZeroBlock = config.blocks().values().stream().anyMatch(weight -> weight > 0);
                 if (hasNonZeroBlock) {
-                    RegistryEntry<Biome> biomeEntry = null;
+                    RegistryKey<Biome> biomeRegistryKey = null;
+                    RegistryKey<ChunkGeneratorSettings> chunkGeneratorSettingsRegistryKey = null;
                     if (dimensionOptionsRegistryKey == DimensionOptions.OVERWORLD) {
-                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.PLAINS));
+                        biomeRegistryKey = BiomeKeys.PLAINS;
+                        chunkGeneratorSettingsRegistryKey = ChunkGeneratorSettings.OVERWORLD;
+                    } else if (dimensionOptionsRegistryKey == DimensionOptions.NETHER) {
+                        biomeRegistryKey = BiomeKeys.NETHER_WASTES;
+                        chunkGeneratorSettingsRegistryKey = ChunkGeneratorSettings.NETHER;
+                    } else if (dimensionOptionsRegistryKey == DimensionOptions.END) {
+                        biomeRegistryKey = BiomeKeys.THE_END;
+                        chunkGeneratorSettingsRegistryKey = ChunkGeneratorSettings.END;
                     }
-                    else if (dimensionOptionsRegistryKey == DimensionOptions.NETHER) {
-                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.NETHER_WASTES));
-                    }
-                    else if (dimensionOptionsRegistryKey == DimensionOptions.END) {
-                        biomeEntry = biomeRegistry.getEntry(biomeRegistry.get(BiomeKeys.THE_END));
-                    }
-                    ChunkGenerator chunkGenerator = new SkyGridChunkGenerator(new FixedBiomeSource(biomeEntry), config);
+                    RegistryEntry<Biome> biomeRegistryEntry = biomeRegistry.getEntry(biomeRegistry.get(biomeRegistryKey));
+                    RegistryEntry<ChunkGeneratorSettings> chunkGeneratorSettingsRegistryEntry = chunkGeneratorSettingsRegistry.getEntry(chunkGeneratorSettingsRegistry.get(chunkGeneratorSettingsRegistryKey));
+                    ChunkGenerator chunkGenerator = new SkyGridChunkGenerator(new FixedBiomeSource(biomeRegistryEntry), chunkGeneratorSettingsRegistryEntry, config);
                     DimensionOptions dimensionOptions = parent.getWorldCreator().getGeneratorOptionsHolder().selectedDimensions().dimensions().get(dimensionOptionsRegistryKey);
 
                     RegistryEntry<DimensionType> dimensionTypeRegistryEntry = dimensionOptions.dimensionTypeEntry();
