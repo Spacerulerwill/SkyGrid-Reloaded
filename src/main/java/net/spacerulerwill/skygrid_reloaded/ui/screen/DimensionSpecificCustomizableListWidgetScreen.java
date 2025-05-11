@@ -340,14 +340,6 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             }
         }
 
-        private boolean isMouseOverAutocompleteWidget(double mouseX, double mouseY) {
-            if (this.autocompleteListWidget == null) {
-                return false;
-            } else {
-                return this.autocompleteListWidget.isMouseOver(mouseX, mouseY);
-            }
-        }
-
         private void doAutocompleteStuff() {
             DimensionSpecificCustomizableListWidgetScreen.this.updateAddButtonActive();
             List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getText());
