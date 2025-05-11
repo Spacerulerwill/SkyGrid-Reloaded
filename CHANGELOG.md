@@ -1,3 +1,5 @@
+* Remove debug print because I'm very silly and left it in before release.
+
 # 1.2.0-1.21.5 - 11/05/25
 
 * Implemented checkerboard biome generation with

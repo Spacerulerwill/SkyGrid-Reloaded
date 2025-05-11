@@ -181,7 +181,6 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
 
     private void updateAddButtonActive() {
         Optional<V> thing = getSelectedThing();
-        System.out.println(getSelectedThing());
         this.addButton.active = thing.isPresent() && this.canAdd(thing.get());
     }
 
