@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
@@ -19,18 +20,18 @@ import java.util.Set;
 
 @Environment(EnvType.CLIENT)
 public class CustomizeSpawnerScreen extends DimensionSpecificCustomizableListWidgetScreen<CustomizeSpawnerScreen.EntityListWidgetEntry, EntityType<?>> {
-    public CustomizeSpawnerScreen(CustomizeSkyGridScreen parent, SkyGridConfig currentConfig) {
-        super(parent, currentConfig, Text.translatable("createWorld.customize.skygrid.spawners"), Text.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
+    public CustomizeSpawnerScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.spawners"), Text.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
     }
 
     private Set<EntityType<?>> getSpawnerEntities() {
         Set<EntityType<?>> entities;
         if (this.currentDimension == DimensionOptions.OVERWORLD) {
-            entities = this.currentConfig.overworldConfig().spawnerEntities();
+            entities = this.currentConfig.overworldConfig().spawnerEntities;
         } else if (this.currentDimension == DimensionOptions.NETHER) {
-            entities = this.currentConfig.netherConfig().spawnerEntities();
+            entities = this.currentConfig.netherConfig().spawnerEntities;
         } else if (this.currentDimension == DimensionOptions.END) {
-            entities = this.currentConfig.endConfig().spawnerEntities();
+            entities = this.currentConfig.endConfig().spawnerEntities;
         } else {
             throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
         }

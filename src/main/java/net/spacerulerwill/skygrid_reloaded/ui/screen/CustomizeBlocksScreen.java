@@ -7,6 +7,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
@@ -24,8 +25,8 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     private static final double MIN_BLOCK_WEIGHT = 0;
     private static final double MAX_BLOCK_WEIGHT = 500;
 
-    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, SkyGridConfig currentConfig) {
-        super(parent, currentConfig, Text.translatable("createWorld.customize.skygrid.blocks"), Text.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
+    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.blocks"), Text.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
     }
 
     private static Item getBlockItem(Block block) {
@@ -93,11 +94,11 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     private Map<Block, Double> getCurrentBlocks() {
         Map<Block, Double> blocks;
         if (this.currentDimension == DimensionOptions.OVERWORLD) {
-            blocks = this.currentConfig.overworldConfig().blocks();
+            blocks = this.currentConfig.overworldConfig().blocks;
         } else if (this.currentDimension == DimensionOptions.NETHER) {
-            blocks = this.currentConfig.netherConfig().blocks();
+            blocks = this.currentConfig.netherConfig().blocks;
         } else if (this.currentDimension == DimensionOptions.END) {
-            blocks = this.currentConfig.endConfig().blocks();
+            blocks = this.currentConfig.endConfig().blocks;
         } else {
             throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
         }

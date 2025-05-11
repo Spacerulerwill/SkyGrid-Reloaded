@@ -2,6 +2,8 @@
   "generator.skygrid_reloaded.skygrid": "SkyGrid",
   "createWorld.customize.skygrid.title": "SkyGrid Customization",
   "createWorld.customize.skygrid.blocks": "Customize Blocks",
+  "createWorld.customize.skygrid.biomes": "Select Biomes",
+  "createWorld.customize.skygrid.biome_scale": "Biome Scale",
   "createWorld.customize.skygrid.blocks.placeholder": "Enter block name",
   "createWorld.customize.skygrid.spawners": "Customize Spawners",
   "createWorld.customize.skygrid.spawners.placeholder": "Enter entity name",

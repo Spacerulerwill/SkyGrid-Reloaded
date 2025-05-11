@@ -24,12 +24,13 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Optional;
 
+import static net.spacerulerwill.skygrid_reloaded.ui.screen.CustomizeSkyGridScreen.DIMENSIONS;
+
 
 /// A screen that will allow you to adjust dimension specific SkyGrid features via a ListWidget
 @Environment(EnvType.CLIENT)
 public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends AlwaysSelectedEntryListWidget.Entry<T>, V> extends Screen {
     private final static Text CLEAR_TEXT = Text.translatable("createWorld.customize.skygrid.clear");
-    private final static List<RegistryKey<DimensionOptions>> DIMENSIONS = List.of(DimensionOptions.OVERWORLD, DimensionOptions.NETHER, DimensionOptions.END);
     private final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
     private final Text title;
     private final Text textFieldPlaceholder;
@@ -45,7 +46,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     private ButtonWidget doneButton;
     private ButtonWidget cancelButton;
 
-    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, SkyGridConfig currentConfig, Text title, Text textFieldPlaceholder, int entryHeight) {
+    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig, Text title, Text textFieldPlaceholder, int entryHeight) {
         super(title);
         this.title = title;
         this.textFieldPlaceholder = textFieldPlaceholder;
@@ -53,6 +54,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         this.parent = parent;
         this.currentDimension = DimensionOptions.OVERWORLD;
         this.currentConfig = new SkyGridConfig(currentConfig);
+        this.currentDimension = initialDimension;
     }
 
     private void initHeader() {
@@ -83,6 +85,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         DirectionalLayoutWidget row2 = DirectionalLayoutWidget.horizontal().spacing(8);
         this.dimensionsSelector = row2.add(new CyclingButtonWidget.Builder<RegistryKey<DimensionOptions>>(value -> Text.translatable(value.getValue().toTranslationKey()))
                 .values(DIMENSIONS)
+                .initially(this.currentDimension)
                 .build(0, 0, 158, 20, Text.translatable("createWorld.customize.skygrid.dimension"), ((button, dimension) -> {
                     this.currentDimension = dimension;
                     this.regenerateListEntries();
@@ -300,7 +303,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         private void doAutocompleteStuff() {
             DimensionSpecificCustomizableListWidgetScreen.this.updateAddButtonActive();
             List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getText());
-            if (autocompleteResults.isEmpty() || !this.isFocused()) {
+            if (autocompleteResults.isEmpty() || (!this.isFocused())) {
                 if (this.autocompleteListWidget != null) {
                     DimensionSpecificCustomizableListWidgetScreen.this.remove(this.autocompleteListWidget);
                     DimensionSpecificCustomizableListWidgetScreen.this.showWidgetsForAutocompleteBox();

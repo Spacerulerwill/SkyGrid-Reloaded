@@ -3,3 +3,4 @@ accessible method net/minecraft/client/gui/widget/EntryListWidget addEntry (Lnet
 accessible method net/minecraft/client/gui/widget/EntryListWidget clearEntries ()V
 accessible method net/minecraft/client/gui/widget/EntryListWidget removeEntry (Lnet/minecraft/client/gui/widget/EntryListWidget$Entry;)Z
 accessible method net/minecraft/client/gui/widget/EntryListWidget replaceEntries (Ljava/util/Collection;)V
+accessible field net/minecraft/world/biome/source/CheckerboardBiomeSource scale I

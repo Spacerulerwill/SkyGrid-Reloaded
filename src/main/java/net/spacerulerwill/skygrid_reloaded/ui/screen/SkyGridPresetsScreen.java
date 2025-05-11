@@ -3,6 +3,7 @@ package net.spacerulerwill.skygrid_reloaded.ui.screen;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -17,6 +18,8 @@ import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
 import net.minecraft.client.gui.widget.ThreePartsLayoutWidget;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.item.Item;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.registry.RegistryOps;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -41,15 +44,18 @@ public class SkyGridPresetsScreen extends Screen {
     private final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this, 33, 64);
     private final CustomizeSkyGridScreen parent;
     private final MinecraftClient client;
+    private final DynamicRegistryManager.Immutable dynamicRegistryManager;
     private TextField textField;
     private ButtonWidget selectPresetButton;
     private ButtonWidget savePresetButton;
     private SkyGridPresetListWidget listWidget;
 
-    protected SkyGridPresetsScreen(MinecraftClient client, CustomizeSkyGridScreen parent) {
+    protected SkyGridPresetsScreen(MinecraftClient client, CustomizeSkyGridScreen parent, DynamicRegistryManager.Immutable dynamicRegistryManager) {
         super(Text.translatable("createWorld.customize.skygrid.presets"));
         this.client = client;
         this.parent = parent;
+        this.dynamicRegistryManager = dynamicRegistryManager;
+        SkyGridReloaded.reloadCustomPresets(this.dynamicRegistryManager);
     }
 
     protected void init() {
@@ -60,6 +66,7 @@ public class SkyGridPresetsScreen extends Screen {
         this.selectPresetButton = row1.add(ButtonWidget.builder(Text.translatable("createWorld.skygrid.customize.presets.select"), (buttonWidget) -> {
             SkyGridPresetListWidget.SkyGridPresetEntry entry = this.listWidget.getSelectedOrNull();
             this.parent.setConfigFromPreset(entry.preset);
+            this.parent.updateBiomeScaleSlider();
             this.client.setScreen(this.parent);
         }).build());
         row1.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
@@ -113,24 +120,25 @@ public class SkyGridPresetsScreen extends Screen {
             int maxWeight = 0;
             // Should be better
             List<Item> allItems = new ArrayList<>();
-            currentConfig.overworldConfig().blocks().keySet().stream()
+            currentConfig.overworldConfig().blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems().keySet());
-            currentConfig.netherConfig().blocks().keySet().stream()
+            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
+            currentConfig.netherConfig().blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems().keySet());
-            currentConfig.endConfig().blocks().keySet().stream()
+            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
+            currentConfig.endConfig().blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems().keySet());
+            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
             Random random = new Random();
             Item icon = allItems.get(random.nextInt(allItems.size()));
             SkyGridPreset preset = new SkyGridPreset(icon, name, currentConfig);
             // Encode it as json
             JsonElement element = new JsonObject();
-            DataResult<JsonElement> json = SkyGridPreset.CODEC.encode(preset, JsonOps.INSTANCE, element);
+            DynamicOps<JsonElement> ops = RegistryOps.of(JsonOps.INSTANCE, this.dynamicRegistryManager);
+            DataResult<JsonElement> json = SkyGridPreset.CODEC.encode(preset, ops, element);
             String jsonString = json.getOrThrow().toString();
             // Write json to file
             String fileName = FabricLoader.getInstance().getConfigDir().toString() + "/" + SkyGridReloaded.MOD_ID + "/" + hashedName + ".json";
@@ -138,7 +146,7 @@ public class SkyGridPresetsScreen extends Screen {
                 writer.write(jsonString);
             }
             // Reload necessary stuff
-            SkyGridReloaded.reloadCustomPresets();
+            SkyGridReloaded.reloadCustomPresets(this.dynamicRegistryManager);
             this.listWidget.refreshEntries();
         } catch (Exception e) {
             SkyGridReloaded.LOGGER.error("Failed to save preset {}: {}", name, e);
@@ -204,7 +212,7 @@ public class SkyGridPresetsScreen extends Screen {
                         String fileName = FabricLoader.getInstance().getConfigDir().toString() + "/" + SkyGridReloaded.MOD_ID + "/" + hashedName + ".json";
                         File file = new File(fileName);
                         Files.deleteIfExists(file.toPath());
-                        SkyGridReloaded.reloadCustomPresets();
+                        SkyGridReloaded.reloadCustomPresets(SkyGridPresetsScreen.this.dynamicRegistryManager);
                         SkyGridPresetListWidget.this.removeEntry(this);
                     } catch (Exception e) {
                         SkyGridReloaded.LOGGER.error("Failed to delete preset {}: {}", preset, e);
