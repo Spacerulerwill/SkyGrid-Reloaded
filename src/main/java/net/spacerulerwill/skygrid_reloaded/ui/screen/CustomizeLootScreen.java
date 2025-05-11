@@ -34,7 +34,7 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     }
 
     @Override
-    protected Optional<Item> getFromTextField(String text) {
+    protected Optional<Item> getThingFromString(String text) {
         try {
             return Registries.ITEM.getOptionalValue(Identifier.of(text));
         } catch (InvalidIdentifierException e) {
