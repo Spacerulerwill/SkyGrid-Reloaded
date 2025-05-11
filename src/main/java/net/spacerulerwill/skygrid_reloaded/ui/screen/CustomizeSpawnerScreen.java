@@ -45,7 +45,7 @@ public class CustomizeSpawnerScreen extends DimensionSpecificCustomizableListWid
     }
 
     @Override
-    protected Optional<EntityType<?>> getFromTextField(String text) {
+    protected Optional<EntityType<?>> getThingFromString(String text) {
         try {
             return Registries.ENTITY_TYPE.getOptionalValue(Identifier.of(text));
         } catch (InvalidIdentifierException e) {
