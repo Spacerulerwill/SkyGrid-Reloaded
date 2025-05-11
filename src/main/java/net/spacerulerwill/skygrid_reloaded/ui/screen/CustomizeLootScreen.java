@@ -5,6 +5,7 @@ import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
@@ -22,8 +23,8 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     private static final double MIN_ITEM_WEIGHT = 0;
     private static final double MAX_ITEM_WEIGHT = 100;
 
-    public CustomizeLootScreen(CustomizeSkyGridScreen parent, SkyGridConfig currentConfig) {
-        super(parent, currentConfig, Text.translatable("createWorld.customize.skygrid.loot"), Text.translatable("createWorld.customize.loot.placeholder"), 25);
+    public CustomizeLootScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.loot"), Text.translatable("createWorld.customize.loot.placeholder"), 25);
     }
 
     @Override
@@ -83,11 +84,11 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     private Map<Item, Double> getChestItems() {
         Map<Item, Double> items;
         if (this.currentDimension == DimensionOptions.OVERWORLD) {
-            items = this.currentConfig.overworldConfig().chestItems();
+            items = this.currentConfig.overworldConfig().chestItems;
         } else if (this.currentDimension == DimensionOptions.NETHER) {
-            items = this.currentConfig.netherConfig().chestItems();
+            items = this.currentConfig.netherConfig().chestItems;
         } else if (this.currentDimension == DimensionOptions.END) {
-            items = this.currentConfig.endConfig().chestItems();
+            items = this.currentConfig.endConfig().chestItems;
         } else {
             throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
         }

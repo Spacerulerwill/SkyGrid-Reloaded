@@ -2,12 +2,15 @@ package net.spacerulerwill.skygrid_reloaded;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryOps;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGenerator;
@@ -30,7 +33,14 @@ public class SkyGridReloaded implements ModInitializer {
     public static ArrayList<SkyGridPreset> CUSTOM_PRESETS = new ArrayList<>();
     public static SkyGridPreset DEFAULT_PRESET;
 
-    public static void reloadCustomPresets() {
+    private static SkyGridPreset loadCustomPreset(Path filepath, RegistryWrapper.WrapperLookup wrapperLookup) throws IOException {
+        String fileContent = Files.readString(filepath);
+        JsonElement json = JsonParser.parseString(fileContent);
+        DynamicOps<JsonElement> ops = RegistryOps.of(JsonOps.INSTANCE, wrapperLookup);
+        return SkyGridPreset.CODEC.parse(ops, json).getOrThrow();
+    }
+
+    public static void reloadCustomPresets(RegistryWrapper.WrapperLookup wrapperLookup) {
         CUSTOM_PRESETS.clear();
         LOGGER.debug("Loading custom presets");
         Path configDir = FabricLoader.getInstance().getConfigDir();
@@ -58,10 +68,7 @@ public class SkyGridReloaded implements ModInitializer {
             }
             LOGGER.debug("Loading custom preset: {}", child.toPath());
             try {
-                String fileContent = Files.readString(child.toPath());
-                JsonElement json = JsonParser.parseString(fileContent);
-                SkyGridPreset preset = SkyGridPreset.CODEC.parse(JsonOps.INSTANCE, json).getOrThrow();
-                SkyGridReloaded.CUSTOM_PRESETS.add(preset);
+                SkyGridReloaded.CUSTOM_PRESETS.add(loadCustomPreset(child.toPath(), wrapperLookup));
             } catch (Exception e) {
                 LOGGER.error("Error loading while loading preset {}: {}", child.toPath(), e);
             }
@@ -73,8 +80,7 @@ public class SkyGridReloaded implements ModInitializer {
     @Override
     public void onInitialize() {
         Registry.register(Registries.CHUNK_GENERATOR, Identifier.of(MOD_ID, "skygrid"), SkyGridChunkGenerator.MAP_CODEC);
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new PresetsReloadListener());
-        reloadCustomPresets();
+        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(PresetsReloadListener.FABRIC_ID, PresetsReloadListener::new);
         LOGGER.info("SkyGrid mod is initialised!");
     }
 }

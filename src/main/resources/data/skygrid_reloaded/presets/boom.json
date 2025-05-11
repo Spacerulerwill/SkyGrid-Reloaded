@@ -10,7 +10,13 @@
       "spawner_entities": [
         "minecraft:creeper"
       ],
-      "chest_items": {}
+      "chest_items": {},
+      "checkerboard": {
+        "scale": 1,
+        "biomes": [
+          "minecraft:the_void"
+        ]
+      }
     },
     "nether_config": {
       "blocks": {
@@ -21,7 +27,13 @@
         "minecraft:blaze",
         "minecraft:ghast"
       ],
-      "chest_items": {}
+      "chest_items": {},
+      "checkerboard": {
+        "scale": 1,
+        "biomes": [
+          "minecraft:the_void"
+        ]
+      }
     },
     "end_config": {
       "blocks": {
@@ -32,7 +44,13 @@
         "minecraft:endermite",
         "minecraft:enderman"
       ],
-      "chest_items": {}
+      "chest_items": {},
+      "checkerboard": {
+        "scale": 1,
+        "biomes": [
+          "minecraft:the_void"
+        ]
+      }
     }
   }
 }

@@ -4,13 +4,9 @@
       "type": "minecraft:overworld",
       "generator": {
         "type": "skygrid_reloaded:skygrid",
-        "biome_source": {
-          "type": "minecraft:fixed",
-          "biome": "minecraft:plains"
-        },
         "settings": "minecraft:overworld",
         "skygrid_settings": {
-          "blocks":{
+          "blocks": {
             "minecraft:stone": 277.77777777777777,
             "minecraft:cobblestone": 277.77777777777777,
             "minecraft:mossy_cobblestone": 277.77777777777777,
@@ -421,6 +417,65 @@
             "minecraft:totem_of_undying": 3.433333333333333,
             "minecraft:enchanted_book": 3.433333333333333,
             "minecraft:enchanted_golden_apple": 3.433333333333333
+          },
+          "checkerboard": {
+            "scale": 1,
+            "biomes": [
+              "minecraft:badlands",
+              "minecraft:bamboo_jungle",
+              "minecraft:beach",
+              "minecraft:birch_forest",
+              "minecraft:cherry_grove",
+              "minecraft:cold_ocean",
+              "minecraft:dark_forest",
+              "minecraft:deep_cold_ocean",
+              "minecraft:deep_dark",
+              "minecraft:deep_frozen_ocean",
+              "minecraft:deep_lukewarm_ocean",
+              "minecraft:deep_ocean",
+              "minecraft:desert",
+              "minecraft:dripstone_caves",
+              "minecraft:eroded_badlands",
+              "minecraft:flower_forest",
+              "minecraft:forest",
+              "minecraft:frozen_ocean",
+              "minecraft:frozen_peaks",
+              "minecraft:frozen_river",
+              "minecraft:grove",
+              "minecraft:ice_spikes",
+              "minecraft:jagged_peaks",
+              "minecraft:jungle",
+              "minecraft:lukewarm_ocean",
+              "minecraft:lush_caves",
+              "minecraft:mangrove_swamp",
+              "minecraft:meadow",
+              "minecraft:mushroom_fields",
+              "minecraft:ocean",
+              "minecraft:old_growth_birch_forest",
+              "minecraft:old_growth_pine_taiga",
+              "minecraft:old_growth_spruce_taiga",
+              "minecraft:pale_garden",
+              "minecraft:plains",
+              "minecraft:river",
+              "minecraft:savanna",
+              "minecraft:savanna_plateau",
+              "minecraft:snowy_beach",
+              "minecraft:snowy_plains",
+              "minecraft:snowy_slopes",
+              "minecraft:snowy_taiga",
+              "minecraft:sparse_jungle",
+              "minecraft:stony_peaks",
+              "minecraft:stony_shore",
+              "minecraft:sunflower_plains",
+              "minecraft:swamp",
+              "minecraft:taiga",
+              "minecraft:warm_ocean",
+              "minecraft:windswept_forest",
+              "minecraft:windswept_gravelly_hills",
+              "minecraft:windswept_hills",
+              "minecraft:windswept_savanna",
+              "minecraft:wooded_badlands"
+            ]
           }
         }
       }
@@ -439,13 +494,9 @@
       "type": "minecraft:the_nether",
       "generator": {
         "type": "skygrid_reloaded:skygrid",
-        "biome_source": {
-          "type": "minecraft:fixed",
-          "biome": "minecraft:nether_wastes"
-        },
         "settings": "minecraft:nether",
         "skygrid_settings": {
-          "blocks":  {
+          "blocks": {
             "minecraft:lava": 125.0,
             "minecraft:magma_block": 125.0,
             "minecraft:gravel": 150.0,
@@ -489,7 +540,17 @@
             "minecraft:magma_cube",
             "minecraft:ghast"
           ],
-          "chest_items": {}
+          "chest_items": {},
+          "checkerboard": {
+            "scale": 1,
+            "biomes": [
+              "minecraft:nether_wastes",
+              "minecraft:soul_sand_valley",
+              "minecraft:crimson_forest",
+              "minecraft:warped_forest",
+              "minecraft:basalt_deltas"
+            ]
+          }
         }
       }
     }
