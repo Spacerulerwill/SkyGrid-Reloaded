@@ -57,7 +57,7 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
     }
 
     @Override
-    protected Optional<RegistryEntry<Biome>> getFromTextField(String text) {
+    protected Optional<RegistryEntry<Biome>> getThingFromString(String text) {
         try {
             Biome biome = this.biomeRegistry.get(Identifier.of(text));
             if (biome == null) {

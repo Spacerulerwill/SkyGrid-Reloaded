@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static net.spacerulerwill.skygrid_reloaded.ui.screen.CustomizeSkyGridScreen.DIMENSIONS;
 
@@ -80,6 +81,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             this.onClear();
             this.listWidget.clearEntries();
             this.listWidget.setScrollAmount(0.0);
+            this.updateAddButtonActive();
         })).width(75).build());
         // Row 2 - Dimension selector and Delete button
         DirectionalLayoutWidget row2 = DirectionalLayoutWidget.horizontal().spacing(8);
@@ -106,11 +108,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         DirectionalLayoutWidget row3 = DirectionalLayoutWidget.horizontal().spacing(8);
         this.textField = row3.add(new SearchTextField(textRenderer, 158, 20, this.textFieldPlaceholder));
         this.addButton = row3.add(ButtonWidget.builder(Text.translatable("createWorld.customize.skygrid.add"), (button) -> {
-            Optional<V> v = this.getFromTextField(this.textField.getText());
+            Optional<V> v = this.getSelectedThing();
             v.ifPresent(this::onAdd);
             this.updateAddButtonActive();
             this.updateDeleteButtonActive();
-            this.textField.setText("");
             this.listWidget.setScrollAmount(this.listWidget.getMaxScroll());
         }).width(75).build());
         rows.add(row3);
@@ -119,6 +120,32 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         this.layout.addFooter(rows);
         this.layout.setFooterHeight(80);
     }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        AtomicBoolean mouseOverAnyWidget = new AtomicBoolean(false);
+
+        this.layout.forEachChild(widget -> {
+            if (widget.isMouseOver(mouseX, mouseY)) {
+                mouseOverAnyWidget.set(true);
+            }
+        });
+
+        if (!mouseOverAnyWidget.get() && !this.textField.isMouseOver(mouseX, mouseY) && (this.textField.autocompleteListWidget == null || !this.textField.autocompleteListWidget.isMouseOver(mouseX, mouseY))) {
+            // remove the autocomplete widget and unfocus the text field
+            if (this.textField.autocompleteListWidget != null) {
+                this.remove(this.textField.autocompleteListWidget);
+                this.showWidgetsForAutocompleteBox();
+                this.textField.autocompleteListWidget = null;
+            }
+            this.textField.setFocused(false);
+        } else if (this.textField.isMouseOver(mouseX, mouseY) && this.textField.autocompleteListWidget == null) {
+            this.textField.doAutocompleteStuff();
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
 
     @Override
     protected void init() {
@@ -131,15 +158,6 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         this.refreshWidgetPositions();
         this.updateAddButtonActive();
         this.updateDeleteButtonActive();
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Logic for unfocusing the text box if you click off of it
-        if (!this.textField.isMouseOver(mouseX, mouseY) && this.textField.isFocused() && !this.textField.isMouseOverAutocompleteWidget(mouseX, mouseY)) {
-            this.textField.setFocused(false);
-        }
-        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     protected void refreshWidgetPositions() {
@@ -162,7 +180,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     }
 
     private void updateAddButtonActive() {
-        Optional<V> thing = getFromTextField(this.textField.getText());
+        Optional<V> thing = getSelectedThing();
         this.addButton.active = thing.isPresent() && this.canAdd(thing.get());
     }
 
@@ -185,7 +203,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
 
     protected abstract void onClear();
 
-    protected abstract Optional<V> getFromTextField(String text);
+    protected abstract Optional<V> getThingFromString(String text);
 
     protected abstract List<AutocompleteListWidget.Entry> getAutocompleteSuggestions(String text);
 
@@ -196,6 +214,20 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     protected abstract void onDelete(T entry);
 
     protected abstract List<T> getEntriesFromConfig();
+
+    private Optional<V> getSelectedThing() {
+        Optional<V> thing1 = this.getThingFromString(this.textField.getText());
+        Optional<V> thing2 = Optional.empty();
+
+        if (this.textField.autocompleteListWidget != null) {
+            var entry = this.textField.autocompleteListWidget.getSelectedOrNull();
+            if (entry != null) {
+                thing2 = this.getThingFromString(entry.valueText);
+            }
+        }
+
+        return thing2.or(() -> thing1); // Prefer thing2 if present
+    }
 
     @Environment(EnvType.CLIENT)
     public static class AutocompleteListWidget extends AlwaysSelectedEntryListWidget<AutocompleteListWidget.Entry> {
@@ -217,15 +249,25 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         }
 
         @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            for (int i = 0; i < this.getEntryCount(); i++) {
+                var entry = this.getEntry(i);
+                if (entry.isMouseOver(mouseX, mouseY)) {
+                    return true;
+                }
+            }
+            return super.isMouseOver(mouseX, mouseY);
+        }
+
+
+        @Override
         public void setSelected(@Nullable DimensionSpecificCustomizableListWidgetScreen.AutocompleteListWidget.Entry entry) {
             super.setSelected(entry);
-            if (entry != null) {
-                this.parent.textField.setText(entry.valueText);
-            }
+            this.parent.updateAddButtonActive();
         }
 
         @Environment(EnvType.CLIENT)
-        public static class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
+        public static class Entry extends AlwaysSelectedEntryListWidget.Entry<DimensionSpecificCustomizableListWidgetScreen.AutocompleteListWidget.Entry> {
             public final String valueText;
             @Nullable
             private final Item iconItem;
@@ -247,10 +289,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             @Override
             public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
                 if (this.iconItem == null) {
-                    context.drawText(this.textRenderer, this.displayText, x + 5, y + 3, 16777215, false);
+                    context.drawText(this.textRenderer, this.displayText, x + 5, y + 5, 16777215, false);
                 } else {
                     RenderUtils.renderItemIcon(this.iconItem, context, x, y);
-                    context.drawText(this.textRenderer, this.displayText, x + 18 + 5, y + 3, 16777215, false);
+                    context.drawText(this.textRenderer, this.displayText, x + 18 + 5, y + 5, 16777215, false);
                 }
             }
         }
@@ -286,24 +328,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             }
         }
 
-        private boolean isMouseOverAutocompleteWidget(double mouseX, double mouseY) {
-            if (this.autocompleteListWidget == null) {
-                return false;
-            } else {
-                return this.autocompleteListWidget.isMouseOver(mouseX, mouseY);
-            }
-        }
-
-        @Override
-        public void setFocused(boolean focused) {
-            super.setFocused(focused);
-            this.doAutocompleteStuff();
-        }
-
         private void doAutocompleteStuff() {
             DimensionSpecificCustomizableListWidgetScreen.this.updateAddButtonActive();
             List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getText());
-            if (autocompleteResults.isEmpty() || (!this.isFocused())) {
+            if (autocompleteResults.isEmpty()) {
                 if (this.autocompleteListWidget != null) {
                     DimensionSpecificCustomizableListWidgetScreen.this.remove(this.autocompleteListWidget);
                     DimensionSpecificCustomizableListWidgetScreen.this.showWidgetsForAutocompleteBox();
