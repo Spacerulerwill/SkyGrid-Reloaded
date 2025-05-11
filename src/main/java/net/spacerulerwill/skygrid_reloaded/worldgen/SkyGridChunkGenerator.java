@@ -37,7 +37,6 @@ import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.source.BiomeAccess;
-import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
@@ -58,7 +57,6 @@ import java.util.concurrent.CompletableFuture;
 public class SkyGridChunkGenerator extends ChunkGenerator {
     public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    BiomeSource.CODEC.fieldOf("biome_source").forGetter(SkyGridChunkGenerator::getBiomeSource),
                     ChunkGeneratorSettings.REGISTRY_CODEC.fieldOf("settings").forGetter((generator) -> generator.settings),
                     SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
             ).apply(instance, SkyGridChunkGenerator::new)
@@ -81,19 +79,18 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     private DiscreteProbabilityCollectionSampler<Block> blockProbabilities;
     private DiscreteProbabilityCollectionSampler<Item> chestItemProbabilities;
 
-
-    public SkyGridChunkGenerator(BiomeSource biomeSource, RegistryEntry<ChunkGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
-        super(biomeSource);
+    public SkyGridChunkGenerator(RegistryEntry<ChunkGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
+        super(config.checkerboardBiomeSource);
         this.settings = settings;
         this.config = config;
-        this.blockProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.blocks());
+        this.blockProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.blocks);
 
-        if (config.chestItems().isEmpty()) {
+        if (config.chestItems.isEmpty()) {
             this.chestItemProbabilities = null;
         } else {
-            this.chestItemProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.chestItems());
+            this.chestItemProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.chestItems);
         }
-        this.entities = config.spawnerEntities().stream().toList();
+        this.entities = config.spawnerEntities.stream().toList();
 
     }
 
@@ -229,11 +226,9 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                         BlockEntity blockEntity = provider.createBlockEntity(blockEntityPos, state);
                         if (blockEntity instanceof LootableContainerBlockEntity lootableContainerBlockEntity) {
                             fillChestBlockEntityWithItems(lootableContainerBlockEntity, random, dynamicRegistryManager);
-                        }
-                        else if (blockEntity instanceof MobSpawnerBlockEntity mobSpawnerBlockEntity && !this.entities.isEmpty()) {
-                            mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities().size())), random);
-                        }
-                        else if (blockEntity instanceof BrushableBlockEntity brushableBlockEntity) {
+                        } else if (blockEntity instanceof MobSpawnerBlockEntity mobSpawnerBlockEntity && !this.entities.isEmpty()) {
+                            mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities.size())), random);
+                        } else if (blockEntity instanceof BrushableBlockEntity brushableBlockEntity) {
                             int lootTableIndex = random.nextBetween(0, ARCHEOLOGY_LOOT_TABLES.size() - 1);
                             brushableBlockEntity.setLootTable(ARCHEOLOGY_LOOT_TABLES.get(lootTableIndex), random.nextInt());
                         }

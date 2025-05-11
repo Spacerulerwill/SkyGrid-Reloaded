@@ -172,6 +172,23 @@
         "minecraft:mooshroom_spawn_egg": 24.76190476190476,
         "minecraft:villager_spawn_egg": 24.76190476190476,
         "minecraft:ocelot_spawn_egg": 24.76190476190476
+      },
+      "checkerboard": {
+        "biomes": [
+          "minecraft:plains",
+          "minecraft:desert",
+          "minecraft:river",
+          "minecraft:taiga",
+          "minecraft:forest",
+          "minecraft:river",
+          "minecraft:ocean",
+          "minecraft:swamp",
+          "minecraft:jungle",
+          "minecraft:savanna",
+          "minecraft:frozen_ocean",
+          "minecraft:mushroom_fields"
+        ],
+        "scale": 1
       }
     },
     "nether_config": {
@@ -192,12 +209,22 @@
         "minecraft:blaze",
         "minecraft:magma_cube"
       ],
-      "chest_items": {}
+      "chest_items": {},
+      "checkerboard": {
+        "biomes": [
+          "minecraft:nether_wastes"
+        ],
+        "scale": 1
+      }
     },
     "end_config": {
       "blocks": {},
       "spawner_entities": [],
-      "chest_items": {}
+      "chest_items": {},
+      "checkerboard": {
+        "biomes": [],
+        "scale": 1
+      }
     }
   }
 }
