@@ -1,3 +1,5 @@
+# 1.2.0-1.21.4 - 11/05/25
+
 * Implemented checkerboard biome generation with
   customization: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/7)
 * Improve autocomplete menu behaviour.
