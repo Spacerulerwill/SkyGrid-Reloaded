@@ -1,3 +1,5 @@
+# 1.2.1-1.21.5 - 13/05/25
+
 * Correct title of **Select Biomes** menu: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/9)
 * Remove debug print because I'm very silly and left it in before release.
 * Fixed bug where item icon background textures were not rendering.
