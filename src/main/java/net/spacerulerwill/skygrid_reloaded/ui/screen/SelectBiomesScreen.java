@@ -28,7 +28,7 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
     private final Registry<Biome> biomeRegistry;
 
     public SelectBiomesScreen(CustomizeSkyGridScreen parent, Registry<Biome> biomeRegistry, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.spawners"), Text.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
+        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.biomes"), Text.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
         this.biomeRegistry = biomeRegistry;
     }
 
