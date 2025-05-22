@@ -6,7 +6,7 @@
   "mixins": [
   ],
   "client": [
-    "WorldCreatorMixin",
+    "WorldCreationUiStateMixin",
     "WorldPresetMixin"
   ],
   "server": [],

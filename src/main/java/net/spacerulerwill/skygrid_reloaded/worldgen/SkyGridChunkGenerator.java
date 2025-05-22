@@ -2,48 +2,48 @@ package net.spacerulerwill.skygrid_reloaded.worldgen;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockEntityProvider;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BrushableBlockEntity;
-import net.minecraft.block.entity.LootableContainerBlockEntity;
-import net.minecraft.block.entity.MobSpawnerBlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.InstrumentComponent;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Instrument;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.PotionItem;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.LootTables;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.ChunkRegion;
-import net.minecraft.world.HeightLimitView;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.StructureWorldAccess;
-import net.minecraft.world.biome.source.BiomeAccess;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.chunk.Blender;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
-import net.minecraft.world.gen.chunk.VerticalBlockSample;
-import net.minecraft.world.gen.noise.NoiseConfig;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Instrument;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.PotionItem;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.component.InstrumentComponent;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.NoiseColumn;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.biome.BiomeManager;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BrushableBlockEntity;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.level.storage.loot.LootTable;
 import net.spacerulerwill.skygrid_reloaded.util.MinecraftRandomAdapter;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.sampling.DiscreteProbabilityCollectionSampler;
@@ -57,29 +57,29 @@ import java.util.concurrent.CompletableFuture;
 public class SkyGridChunkGenerator extends ChunkGenerator {
     public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    ChunkGeneratorSettings.REGISTRY_CODEC.fieldOf("settings").forGetter((generator) -> generator.settings),
+                    NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter((generator) -> generator.settings),
                     SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
             ).apply(instance, SkyGridChunkGenerator::new)
     );
 
     public static final int MAX_BOOK_ENCHANTS = 5;
 
-    public static final List<RegistryKey<LootTable>> ARCHEOLOGY_LOOT_TABLES = Arrays.asList(
-            LootTables.DESERT_PYRAMID_ARCHAEOLOGY,
-            LootTables.DESERT_WELL_ARCHAEOLOGY,
-            LootTables.OCEAN_RUIN_COLD_ARCHAEOLOGY,
-            LootTables.OCEAN_RUIN_WARM_ARCHAEOLOGY,
-            LootTables.TRAIL_RUINS_COMMON_ARCHAEOLOGY,
-            LootTables.TRAIL_RUINS_RARE_ARCHAEOLOGY
+    public static final List<ResourceKey<LootTable>> ARCHEOLOGY_LOOT_TABLES = Arrays.asList(
+            BuiltInLootTables.DESERT_PYRAMID_ARCHAEOLOGY,
+            BuiltInLootTables.DESERT_WELL_ARCHAEOLOGY,
+            BuiltInLootTables.OCEAN_RUIN_COLD_ARCHAEOLOGY,
+            BuiltInLootTables.OCEAN_RUIN_WARM_ARCHAEOLOGY,
+            BuiltInLootTables.TRAIL_RUINS_ARCHAEOLOGY_COMMON,
+            BuiltInLootTables.TRAIL_RUINS_ARCHAEOLOGY_RARE
     );
 
     private final SkyGridChunkGeneratorConfig config;
     private final List<EntityType<?>> entities;
-    private final RegistryEntry<ChunkGeneratorSettings> settings;
+    private final Holder<NoiseGeneratorSettings> settings;
     private DiscreteProbabilityCollectionSampler<Block> blockProbabilities;
     private DiscreteProbabilityCollectionSampler<Item> chestItemProbabilities;
 
-    public SkyGridChunkGenerator(RegistryEntry<ChunkGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
+    public SkyGridChunkGenerator(Holder<NoiseGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
         super(config.checkerboardBiomeSource);
         this.settings = settings;
         this.config = config;
@@ -94,23 +94,23 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     }
 
-    private static Random getRandomForChunk(NoiseConfig noiseConfig, int x, int z) {
-        return noiseConfig.getOreRandomDeriver().split((1610612741L * (long) x + 805306457L * (long) z + 402653189L) ^ 201326611L);
+    private static RandomSource getRandomForChunk(RandomState noiseConfig, int x, int z) {
+        return noiseConfig.oreRandom().fromSeed((1610612741L * (long) x + 805306457L * (long) z + 402653189L) ^ 201326611L);
     }
 
-    private static void addRandomEnchantmentToItemStack(ItemStack itemStack, Random random, Registry<Enchantment> enchantmentRegistry) {
-        RegistryEntry<Enchantment> enchantmentRegistryEntry = enchantmentRegistry.getRandom(random).get();
-        int level = random.nextBetween(1, enchantmentRegistryEntry.value().getMaxLevel());
-        itemStack.addEnchantment(enchantmentRegistryEntry, level);
+    private static void addRandomEnchantmentToItemStack(ItemStack itemStack, RandomSource random, Registry<Enchantment> enchantmentRegistry) {
+        Holder<Enchantment> enchantmentRegistryEntry = enchantmentRegistry.getRandom(random).get();
+        int level = random.nextIntBetweenInclusive(1, enchantmentRegistryEntry.value().getMaxLevel());
+        itemStack.enchant(enchantmentRegistryEntry, level);
     }
 
     @Override
-    protected MapCodec<? extends ChunkGenerator> getCodec() {
+    protected MapCodec<? extends ChunkGenerator> codec() {
         return MAP_CODEC;
     }
 
     @Override
-    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk) {
+    public void applyCarvers(WorldGenRegion chunkRegion, long seed, RandomState noiseConfig, BiomeManager biomeAccess, StructureManager structureAccessor, ChunkAccess chunk) {
     }
 
     public SkyGridChunkGeneratorConfig getConfig() {
@@ -121,19 +121,19 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     Empty methods - irrelevant for now
      */
     @Override
-    public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
+    public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureAccessor) {
     }
 
     @Override
-    public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
+    public void buildSurface(WorldGenRegion region, StructureManager structures, RandomState noiseConfig, ChunkAccess chunk) {
     }
 
     @Override
-    public void populateEntities(ChunkRegion region) {
+    public void spawnOriginalMobs(WorldGenRegion region) {
     }
 
     @Override
-    public void appendDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+    public void addDebugScreenInfo(List<String> text, RandomState noiseConfig, BlockPos pos) {
     }
 
     /*
@@ -141,14 +141,14 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     We have no structures so is irrelevant for now - a zero value is fine.
      */
     @Override
-    public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
+    public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState noiseConfig) {
         return 0;
     }
 
     // Max world height, how many blocks high from minimumY the chunks generate
     @Override
-    public int getWorldHeight() {
-        return this.settings.value().generationShapeConfig().height();
+    public int getGenDepth() {
+        return this.settings.value().noiseSettings().height();
     }
 
     // No oceans in skygrid
@@ -159,17 +159,17 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     // Bottom of the world is here
     @Override
-    public int getMinimumY() {
-        return this.settings.value().generationShapeConfig().minimumY();
+    public int getMinY() {
+        return this.settings.value().noiseSettings().minY();
     }
 
-    private void fillChestBlockEntityWithItems(LootableContainerBlockEntity blockEntity, Random random, DynamicRegistryManager dynamicRegistryManager) {
+    private void fillChestBlockEntityWithItems(RandomizableContainerBlockEntity blockEntity, RandomSource random, RegistryAccess dynamicRegistryManager) {
         if (this.chestItemProbabilities != null) {
             // How many items for chest
-            int numItems = Math.clamp(random.nextBetween(2, 5), 0, blockEntity.size());
+            int numItems = Math.clamp(random.nextIntBetweenInclusive(2, 5), 0, blockEntity.getContainerSize());
             // Generate 26 numbers and shuffle them
             ArrayList<Integer> slots = new ArrayList<>();
-            for (int i = 0; i < blockEntity.size(); i++) {
+            for (int i = 0; i < blockEntity.getContainerSize(); i++) {
                 slots.add(i);
             }
             Collections.shuffle(slots);
@@ -177,16 +177,16 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
             int nextSlotIdx = 0;
             for (int i = 0; i < numItems; i++) {
                 Item item = this.chestItemProbabilities.sample();
-                ItemStack itemStack = item.getDefaultStack();
+                ItemStack itemStack = item.getDefaultInstance();
                 if (item instanceof PotionItem || item.equals(Items.TIPPED_ARROW) || item.equals(Items.SUSPICIOUS_STEW)) {
-                    itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(Registries.POTION.getRandom(random).get()));
+                    itemStack.set(DataComponents.POTION_CONTENTS, new PotionContents(BuiltInRegistries.POTION.getRandom(random).get()));
                 } else if (item.equals(Items.GOAT_HORN)) {
-                    Registry<Instrument> instrumentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.INSTRUMENT);
-                    RegistryEntry.Reference<Instrument> instrument = instrumentRegistry.getRandom(random).get();
-                    itemStack.set(DataComponentTypes.INSTRUMENT, new InstrumentComponent(instrument));
+                    Registry<Instrument> instrumentRegistry = dynamicRegistryManager.lookupOrThrow(Registries.INSTRUMENT);
+                    Holder.Reference<Instrument> instrument = instrumentRegistry.getRandom(random).get();
+                    itemStack.set(DataComponents.INSTRUMENT, new InstrumentComponent(instrument));
                 } else if (item.equals(Items.ENCHANTED_BOOK)) {
                     // always have 1 enchantment at least
-                    Registry<Enchantment> enchantmentRegistry = dynamicRegistryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
+                    Registry<Enchantment> enchantmentRegistry = dynamicRegistryManager.lookupOrThrow(Registries.ENCHANTMENT);
                     float chance = 1.0f;
                     for (int j = 0; j < MAX_BOOK_ENCHANTS; j++) {
                         if (random.nextFloat() < chance) {
@@ -197,16 +197,16 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
                 }
                 int slotIdx = slots.get(nextSlotIdx);
                 nextSlotIdx += 1;
-                blockEntity.setStack(slotIdx, itemStack);
+                blockEntity.setItem(slotIdx, itemStack);
             }
         }
     }
 
     // Doing it all here is good enough for now
     @Override
-    public CompletableFuture<Chunk> populateNoise(Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
-        DynamicRegistryManager dynamicRegistryManager = structureAccessor.getRegistryManager();
-        Random random = getRandomForChunk(noiseConfig, chunk.getPos().x, chunk.getPos().z);
+    public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState noiseConfig, StructureManager structureAccessor, ChunkAccess chunk) {
+        RegistryAccess dynamicRegistryManager = structureAccessor.registryAccess();
+        RandomSource random = getRandomForChunk(noiseConfig, chunk.getPos().x, chunk.getPos().z);
         UniformRandomProvider uniformRandomProvider = new MinecraftRandomAdapter(random);
         this.blockProbabilities = this.blockProbabilities.withUniformRandomProvider(uniformRandomProvider);
         if (this.chestItemProbabilities != null) {
@@ -216,20 +216,20 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
             for (int z = 0; z < 16; z += 4) {
                 int worldX = chunk.getPos().x * 16 + x;
                 int worldZ = chunk.getPos().z * 16 + z;
-                for (int y = getMinimumY(); y < getMinimumY() + getWorldHeight(); y += 4) {
+                for (int y = getMinY(); y < getMinY() + getGenDepth(); y += 4) {
                     BlockPos blockPos = new BlockPos(x, y, z);
                     Block block = blockProbabilities.sample();
-                    BlockState state = block.getDefaultState().withIfExists(Properties.PERSISTENT, true);
+                    BlockState state = block.defaultBlockState().trySetValue(BlockStateProperties.PERSISTENT, true);
                     chunk.setBlockState(blockPos, state);
-                    if (block instanceof BlockEntityProvider provider) {
+                    if (block instanceof EntityBlock provider) {
                         BlockPos blockEntityPos = new BlockPos(worldX, y, worldZ);
-                        BlockEntity blockEntity = provider.createBlockEntity(blockEntityPos, state);
-                        if (blockEntity instanceof LootableContainerBlockEntity lootableContainerBlockEntity) {
+                        BlockEntity blockEntity = provider.newBlockEntity(blockEntityPos, state);
+                        if (blockEntity instanceof RandomizableContainerBlockEntity lootableContainerBlockEntity) {
                             fillChestBlockEntityWithItems(lootableContainerBlockEntity, random, dynamicRegistryManager);
-                        } else if (blockEntity instanceof MobSpawnerBlockEntity mobSpawnerBlockEntity && !this.entities.isEmpty()) {
-                            mobSpawnerBlockEntity.setEntityType(this.entities.get(random.nextInt(config.spawnerEntities.size())), random);
+                        } else if (blockEntity instanceof SpawnerBlockEntity mobSpawnerBlockEntity && !this.entities.isEmpty()) {
+                            mobSpawnerBlockEntity.setEntityId(this.entities.get(random.nextInt(config.spawnerEntities.size())), random);
                         } else if (blockEntity instanceof BrushableBlockEntity brushableBlockEntity) {
-                            int lootTableIndex = random.nextBetween(0, ARCHEOLOGY_LOOT_TABLES.size() - 1);
+                            int lootTableIndex = random.nextIntBetweenInclusive(0, ARCHEOLOGY_LOOT_TABLES.size() - 1);
                             brushableBlockEntity.setLootTable(ARCHEOLOGY_LOOT_TABLES.get(lootTableIndex), random.nextInt());
                         }
                         chunk.setBlockEntity(blockEntity);
@@ -240,22 +240,22 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
         // End portal placement
         if (chunk.getPos().x == 0 && chunk.getPos().z == 0) {
-            chunk.setBlockState(new BlockPos(0, -64, 0), Blocks.AIR.getDefaultState());
-            chunk.setBlockState(new BlockPos(2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST));  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(0, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH)); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, 0), Blocks.AIR.defaultBlockState());
+            chunk.setBlockState(new BlockPos(2, -64, 0), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, 2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(2, -64, 1), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(1, -64, 2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == -1 && chunk.getPos().z == 0) {
-            chunk.setBlockState(new BlockPos(-2, -64, 0), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));   // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-2, -64, 1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-1, -64, 2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, 0), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));   // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, 1), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-1, -64, 2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));  // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == 0 && chunk.getPos().z == -1) {
-            chunk.setBlockState(new BlockPos(0, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH)); // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH));  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(0, -64, -2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH)); // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(1, -64, -2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(2, -64, -1), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST)); // Face towards center (1, -64, 1)
         } else if (chunk.getPos().x == -1 && chunk.getPos().z == -1) {
-            chunk.setBlockState(new BlockPos(-2, -64, -1), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
-            chunk.setBlockState(new BlockPos(-1, -64, -2), Blocks.END_PORTAL_FRAME.getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.SOUTH));   // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-2, -64, -1), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));  // Face towards center (1, -64, 1)
+            chunk.setBlockState(new BlockPos(-1, -64, -2), Blocks.END_PORTAL_FRAME.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));   // Face towards center (1, -64, 1)
         }
 
 
@@ -264,13 +264,13 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     // Get one column of the terrain
     @Override
-    public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
-        Random random = getRandomForChunk(noiseConfig, x >> 4, z >> 4);
+    public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor world, RandomState noiseConfig) {
+        RandomSource random = getRandomForChunk(noiseConfig, x >> 4, z >> 4);
         blockProbabilities = blockProbabilities.withUniformRandomProvider(new MinecraftRandomAdapter(random));
-        BlockState[] states = new BlockState[getWorldHeight() / 4];
-        for (int y = getMinimumY(); y < getMinimumY() + getWorldHeight(); y += 4) {
-            states[(y - getMinimumY()) / 4] = blockProbabilities.sample().getDefaultState();
+        BlockState[] states = new BlockState[getGenDepth() / 4];
+        for (int y = getMinY(); y < getMinY() + getGenDepth(); y += 4) {
+            states[(y - getMinY()) / 4] = blockProbabilities.sample().defaultBlockState();
         }
-        return new VerticalBlockSample(getMinimumY(), states);
+        return new NoiseColumn(getMinY(), states);
     }
 }

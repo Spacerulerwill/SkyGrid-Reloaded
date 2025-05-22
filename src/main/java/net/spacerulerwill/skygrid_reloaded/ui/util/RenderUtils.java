@@ -1,23 +1,23 @@
 package net.spacerulerwill.skygrid_reloaded.ui.util;
 
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class RenderUtils {
-    private static final Identifier SLOT_TEXTURE = Identifier.ofVanilla("container/slot");
+    private static final ResourceLocation SLOT_TEXTURE = ResourceLocation.withDefaultNamespace("container/slot");
 
-    private static void renderIconBackgroundTexture(DrawContext context, int x, int y) {
-        context.drawGuiTexture(RenderLayer::getGuiTextured, SLOT_TEXTURE, x, y, 18, 18);
+    private static void renderIconBackgroundTexture(GuiGraphics context, int x, int y) {
+        context.blitSprite(RenderType::guiTextured, SLOT_TEXTURE, x, y, 18, 18);
     }
 
-    public static void renderItemIcon(Item item, DrawContext context, int x, int y) {
-        ItemStack itemStack = item.getDefaultStack();
+    public static void renderItemIcon(Item item, GuiGraphics context, int x, int y) {
+        ItemStack itemStack = item.getDefaultInstance();
         renderIconBackgroundTexture(context, x + 1, y + 1);
         if (!itemStack.isEmpty()) {
-            context.drawItemWithoutEntity(itemStack, x + 2, y + 2);
+            context.renderFakeItem(itemStack, x + 2, y + 2);
         }
     }
 }

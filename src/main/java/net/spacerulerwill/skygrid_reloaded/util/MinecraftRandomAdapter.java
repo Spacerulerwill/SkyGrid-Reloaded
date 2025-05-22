@@ -1,16 +1,16 @@
 package net.spacerulerwill.skygrid_reloaded.util;
 
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.RandomSource;
 import org.apache.commons.rng.UniformRandomProvider;
 
 public class MinecraftRandomAdapter implements UniformRandomProvider {
-    private final Random minecraftRandom;
+    private final RandomSource minecraftRandom;
 
     public MinecraftRandomAdapter() {
-        this.minecraftRandom = Random.create();
+        this.minecraftRandom = RandomSource.create();
     }
 
-    public MinecraftRandomAdapter(Random minecraftRandom) {
+    public MinecraftRandomAdapter(RandomSource minecraftRandom) {
         this.minecraftRandom = minecraftRandom;
     }
 

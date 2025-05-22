@@ -2,20 +2,20 @@ package net.spacerulerwill.skygrid_reloaded.ui.screen;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.CyclingButtonWidget;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
-import net.minecraft.client.gui.widget.ThreePartsLayoutWidget;
-import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LinearLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.spacerulerwill.skygrid_reloaded.ui.util.RenderUtils;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.TextField;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
@@ -30,72 +30,72 @@ import static net.spacerulerwill.skygrid_reloaded.ui.screen.CustomizeSkyGridScre
 
 /// A screen that will allow you to adjust dimension specific SkyGrid features via a ListWidget
 @Environment(EnvType.CLIENT)
-public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends AlwaysSelectedEntryListWidget.Entry<T>, V> extends Screen {
-    private final static Text CLEAR_TEXT = Text.translatable("createWorld.customize.skygrid.clear");
-    private final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
-    private final Text title;
-    private final Text textFieldPlaceholder;
+public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends ObjectSelectionList.Entry<T>, V> extends Screen {
+    private final static Component CLEAR_TEXT = Component.translatable("createWorld.customize.skygrid.clear");
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
+    private final Component title;
+    private final Component textFieldPlaceholder;
     private final CustomizeSkyGridScreen parent;
     private final int entryHeight;
     protected ListWidget listWidget;
     protected SearchTextField textField;
-    protected RegistryKey<DimensionOptions> currentDimension;
+    protected ResourceKey<LevelStem> currentDimension;
     protected SkyGridConfig currentConfig;
-    private ButtonWidget addButton;
-    private ButtonWidget deleteButton;
-    private CyclingButtonWidget<RegistryKey<DimensionOptions>> dimensionsSelector;
-    private ButtonWidget doneButton;
-    private ButtonWidget cancelButton;
+    private Button addButton;
+    private Button deleteButton;
+    private CycleButton<ResourceKey<LevelStem>> dimensionsSelector;
+    private Button doneButton;
+    private Button cancelButton;
 
-    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig, Text title, Text textFieldPlaceholder, int entryHeight) {
+    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig, Component title, Component textFieldPlaceholder, int entryHeight) {
         super(title);
         this.title = title;
         this.textFieldPlaceholder = textFieldPlaceholder;
         this.entryHeight = entryHeight;
         this.parent = parent;
-        this.currentDimension = DimensionOptions.OVERWORLD;
+        this.currentDimension = LevelStem.OVERWORLD;
         this.currentConfig = new SkyGridConfig(currentConfig);
         this.currentDimension = initialDimension;
     }
 
     private void initHeader() {
-        this.layout.addHeader(this.title, this.textRenderer);
+        this.layout.addTitleHeader(this.title, this.font);
     }
 
     private void initBody() {
-        this.listWidget = this.layout.addBody(new ListWidget(this.client, this.width, this.height - 117, 43, this.entryHeight));
+        this.listWidget = this.layout.addToContents(new ListWidget(this.minecraft, this.width, this.height - 117, 43, this.entryHeight));
     }
 
     private void initFooter() {
-        DirectionalLayoutWidget rows = DirectionalLayoutWidget.vertical().spacing(4);
+        LinearLayout rows = LinearLayout.vertical().spacing(4);
         // Row 1 - Done, Clear, Cancel
-        DirectionalLayoutWidget row1 = DirectionalLayoutWidget.horizontal().spacing(8);
-        this.doneButton = row1.add(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
+        LinearLayout row1 = LinearLayout.horizontal().spacing(8);
+        this.doneButton = row1.addChild(Button.builder(CommonComponents.GUI_DONE, (button) -> {
             this.parent.updateSkyGridConfig(this.currentConfig);
-            this.close();
+            this.onClose();
         }).width(75).build());
-        this.cancelButton = row1.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
-            this.close();
+        this.cancelButton = row1.addChild(Button.builder(CommonComponents.GUI_CANCEL, (button) -> {
+            this.onClose();
         }).width(75).build());
-        row1.add(ButtonWidget.builder(CLEAR_TEXT, (button -> {
+        row1.addChild(Button.builder(CLEAR_TEXT, (button -> {
             this.onClear();
             this.listWidget.clearEntries();
-            this.listWidget.setScrollY(0.0);
+            this.listWidget.setScrollAmount(0.0);
             this.updateAddButtonActive();
         })).width(75).build());
         // Row 2 - Dimension selector and Delete button
-        DirectionalLayoutWidget row2 = DirectionalLayoutWidget.horizontal().spacing(8);
-        this.dimensionsSelector = row2.add(new CyclingButtonWidget.Builder<RegistryKey<DimensionOptions>>(value -> Text.translatable(value.getValue().toTranslationKey()))
-                .values(DIMENSIONS)
-                .initially(this.currentDimension)
-                .build(0, 0, 158, 20, Text.translatable("createWorld.customize.skygrid.dimension"), ((button, dimension) -> {
+        LinearLayout row2 = LinearLayout.horizontal().spacing(8);
+        this.dimensionsSelector = row2.addChild(new CycleButton.Builder<ResourceKey<LevelStem>>(value -> Component.translatable(value.location().toLanguageKey()))
+                .withValues(DIMENSIONS)
+                .withInitialValue(this.currentDimension)
+                .create(0, 0, 158, 20, Component.translatable("createWorld.customize.skygrid.dimension"), ((button, dimension) -> {
                     this.currentDimension = dimension;
                     this.regenerateListEntries();
                     this.updateAddButtonActive();
                     this.updateDeleteButtonActive();
                 })));
-        this.deleteButton = row2.add(ButtonWidget.builder(Text.translatable("createWorld.customize.skygrid.delete"), (button) -> {
-            T entry = this.listWidget.getSelectedOrNull();
+        this.deleteButton = row2.addChild(Button.builder(Component.translatable("createWorld.customize.skygrid.delete"), (button) -> {
+            T entry = this.listWidget.getSelected();
             if (entry == null) {
                 return;
             }
@@ -105,19 +105,19 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             this.updateDeleteButtonActive();
         }).width(75).build());
         // Row 3 - Text field and Add button
-        DirectionalLayoutWidget row3 = DirectionalLayoutWidget.horizontal().spacing(8);
-        this.textField = row3.add(new SearchTextField(textRenderer, 158, 20, this.textFieldPlaceholder));
-        this.addButton = row3.add(ButtonWidget.builder(Text.translatable("createWorld.customize.skygrid.add"), (button) -> {
+        LinearLayout row3 = LinearLayout.horizontal().spacing(8);
+        this.textField = row3.addChild(new SearchTextField(font, 158, 20, this.textFieldPlaceholder));
+        this.addButton = row3.addChild(Button.builder(Component.translatable("createWorld.customize.skygrid.add"), (button) -> {
             Optional<V> v = this.getSelectedThing();
             v.ifPresent(this::onAdd);
             this.updateAddButtonActive();
             this.updateDeleteButtonActive();
-            this.listWidget.setScrollY(this.listWidget.getMaxScrollY());
+            this.listWidget.setScrollAmount(this.listWidget.maxScrollAmount());
         }).width(75).build());
-        rows.add(row3);
-        rows.add(row2);
-        rows.add(row1);
-        this.layout.addFooter(rows);
+        rows.addChild(row3);
+        rows.addChild(row2);
+        rows.addChild(row1);
+        this.layout.addToFooter(rows);
         this.layout.setFooterHeight(80);
     }
 
@@ -125,7 +125,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         AtomicBoolean mouseOverAnyWidget = new AtomicBoolean(false);
 
-        this.layout.forEachChild(widget -> {
+        this.layout.visitWidgets(widget -> {
             if (widget.isMouseOver(mouseX, mouseY)) {
                 mouseOverAnyWidget.set(true);
             }
@@ -134,7 +134,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         if (!mouseOverAnyWidget.get() && !this.textField.isMouseOver(mouseX, mouseY) && (this.textField.autocompleteListWidget == null || !this.textField.autocompleteListWidget.isMouseOver(mouseX, mouseY))) {
             // remove the autocomplete widget and unfocus the text field
             if (this.textField.autocompleteListWidget != null) {
-                this.remove(this.textField.autocompleteListWidget);
+                this.removeWidget(this.textField.autocompleteListWidget);
                 this.showWidgetsForAutocompleteBox();
                 this.textField.autocompleteListWidget = null;
             }
@@ -153,30 +153,30 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         this.initHeader();
         this.initBody();
         this.initFooter();
-        this.layout.forEachChild(this::addDrawableChild);
+        this.layout.visitWidgets(this::addRenderableWidget);
         this.regenerateListEntries();
-        this.refreshWidgetPositions();
+        this.repositionElements();
         this.updateAddButtonActive();
         this.updateDeleteButtonActive();
     }
 
-    protected void refreshWidgetPositions() {
-        this.layout.refreshPositions();
+    protected void repositionElements() {
+        this.layout.arrangeElements();
         if (this.listWidget != null) {
-            this.listWidget.position(this.width, this.layout);
+            this.listWidget.updateSize(this.width, this.layout);
         }
         this.textField.refreshPositions();
     }
 
-    public void close() {
-        if (this.client != null) {
-            this.client.setScreen(this.parent);
+    public void onClose() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(this.parent);
         }
     }
 
     private void regenerateListEntries() {
         this.listWidget.replaceEntries(this.getEntriesFromConfig());
-        this.listWidget.setScrollY(0.0);
+        this.listWidget.setScrollAmount(0.0);
     }
 
     private void updateAddButtonActive() {
@@ -185,20 +185,20 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     }
 
     private void updateDeleteButtonActive() {
-        T entry = this.listWidget.getSelectedOrNull();
+        T entry = this.listWidget.getSelected();
         this.deleteButton.active = entry != null;
     }
 
     private void hideWidgetsForAutocompleteBox() {
-        this.remove(this.doneButton);
-        this.remove(this.cancelButton);
-        this.remove(this.dimensionsSelector);
+        this.removeWidget(this.doneButton);
+        this.removeWidget(this.cancelButton);
+        this.removeWidget(this.dimensionsSelector);
     }
 
     private void showWidgetsForAutocompleteBox() {
-        this.addDrawableChild(this.doneButton);
-        this.addDrawableChild(this.cancelButton);
-        this.addDrawableChild(this.dimensionsSelector);
+        this.addRenderableWidget(this.doneButton);
+        this.addRenderableWidget(this.cancelButton);
+        this.addRenderableWidget(this.dimensionsSelector);
     }
 
     protected abstract void onClear();
@@ -216,11 +216,11 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     protected abstract List<T> getEntriesFromConfig();
 
     private Optional<V> getSelectedThing() {
-        Optional<V> thing1 = this.getThingFromString(this.textField.getText());
+        Optional<V> thing1 = this.getThingFromString(this.textField.getValue());
         Optional<V> thing2 = Optional.empty();
 
         if (this.textField.autocompleteListWidget != null) {
-            var entry = this.textField.autocompleteListWidget.getSelectedOrNull();
+            var entry = this.textField.autocompleteListWidget.getSelected();
             if (entry != null) {
                 thing2 = this.getThingFromString(entry.valueText);
             }
@@ -230,10 +230,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
     }
 
     @Environment(EnvType.CLIENT)
-    public static class AutocompleteListWidget extends AlwaysSelectedEntryListWidget<AutocompleteListWidget.Entry> {
+    public static class AutocompleteListWidget extends ObjectSelectionList<AutocompleteListWidget.Entry> {
         DimensionSpecificCustomizableListWidgetScreen<?, ?> parent;
 
-        public AutocompleteListWidget(MinecraftClient minecraftClient, DimensionSpecificCustomizableListWidgetScreen<?, ?> parent) {
+        public AutocompleteListWidget(Minecraft minecraftClient, DimensionSpecificCustomizableListWidgetScreen<?, ?> parent) {
             super(minecraftClient, 158, 44, 0, 24);
             this.parent = parent;
         }
@@ -244,13 +244,13 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         }
 
         @Override
-        protected int getScrollbarX() {
+        protected int scrollBarX() {
             return this.getX() + this.getWidth() - 6;
         }
 
         @Override
         public boolean isMouseOver(double mouseX, double mouseY) {
-            for (int i = 0; i < this.getEntryCount(); i++) {
+            for (int i = 0; i < this.getItemCount(); i++) {
                 var entry = this.getEntry(i);
                 if (entry.isMouseOver(mouseX, mouseY)) {
                     return true;
@@ -267,20 +267,20 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         }
 
         @Override
-        public void setSelected(int index) {
-            super.setSelected(index);
+        public void setSelectedIndex(int index) {
+            super.setSelectedIndex(index);
             this.parent.updateAddButtonActive();
         }
 
         @Environment(EnvType.CLIENT)
-        public static class Entry extends AlwaysSelectedEntryListWidget.Entry<DimensionSpecificCustomizableListWidgetScreen.AutocompleteListWidget.Entry> {
+        public static class Entry extends ObjectSelectionList.Entry<DimensionSpecificCustomizableListWidgetScreen.AutocompleteListWidget.Entry> {
             public final String valueText;
             @Nullable
             private final Item iconItem;
             private final String displayText;
-            private final TextRenderer textRenderer;
+            private final Font textRenderer;
 
-            public Entry(@Nullable Item iconItem, String displayText, String valueText, TextRenderer textRenderer) {
+            public Entry(@Nullable Item iconItem, String displayText, String valueText, Font textRenderer) {
                 this.iconItem = iconItem;
                 this.displayText = displayText;
                 this.valueText = valueText;
@@ -288,25 +288,25 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
             }
 
             @Override
-            public Text getNarration() {
-                return Text.empty();
+            public Component getNarration() {
+                return Component.empty();
             }
 
             @Override
-            public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
                 if (this.iconItem == null) {
-                    context.drawText(this.textRenderer, this.displayText, x + 5, y + 5, 16777215, false);
+                    context.drawString(this.textRenderer, this.displayText, x + 5, y + 5, 16777215, false);
                 } else {
                     RenderUtils.renderItemIcon(this.iconItem, context, x, y);
-                    context.drawText(this.textRenderer, this.displayText, x + 18 + 5, y + 5, 16777215, false);
+                    context.drawString(this.textRenderer, this.displayText, x + 18 + 5, y + 5, 16777215, false);
                 }
             }
         }
     }
 
     @Environment(EnvType.CLIENT)
-    protected class ListWidget extends AlwaysSelectedEntryListWidget<T> {
-        public ListWidget(MinecraftClient minecraftClient, int i, int j, int k, int l) {
+    protected class ListWidget extends ObjectSelectionList<T> {
+        public ListWidget(Minecraft minecraftClient, int i, int j, int k, int l) {
             super(minecraftClient, i, j, k, l);
         }
 
@@ -317,8 +317,8 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         }
 
         @Override
-        public void setSelected(int index) {
-            super.setSelected(index);
+        public void setSelectedIndex(int index) {
+            super.setSelectedIndex(index);
             DimensionSpecificCustomizableListWidgetScreen.this.updateDeleteButtonActive();
         }
     }
@@ -328,7 +328,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
         @Nullable
         public AutocompleteListWidget autocompleteListWidget;
 
-        public SearchTextField(TextRenderer textRenderer, int x, int y, Text text) {
+        public SearchTextField(Font textRenderer, int x, int y, Component text) {
             super(textRenderer, x, y, text);
             this.setMaxLength(1024);
         }
@@ -342,21 +342,21 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Al
 
         private void doAutocompleteStuff() {
             DimensionSpecificCustomizableListWidgetScreen.this.updateAddButtonActive();
-            List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getText());
+            List<AutocompleteListWidget.Entry> autocompleteResults = DimensionSpecificCustomizableListWidgetScreen.this.getAutocompleteSuggestions(this.getValue());
             if (autocompleteResults.isEmpty()) {
                 if (this.autocompleteListWidget != null) {
-                    DimensionSpecificCustomizableListWidgetScreen.this.remove(this.autocompleteListWidget);
+                    DimensionSpecificCustomizableListWidgetScreen.this.removeWidget(this.autocompleteListWidget);
                     DimensionSpecificCustomizableListWidgetScreen.this.showWidgetsForAutocompleteBox();
                     this.autocompleteListWidget = null;
                 }
             } else {
                 if (this.autocompleteListWidget == null) {
-                    this.autocompleteListWidget = new AutocompleteListWidget(DimensionSpecificCustomizableListWidgetScreen.this.client, DimensionSpecificCustomizableListWidgetScreen.this);
+                    this.autocompleteListWidget = new AutocompleteListWidget(DimensionSpecificCustomizableListWidgetScreen.this.minecraft, DimensionSpecificCustomizableListWidgetScreen.this);
                     this.refreshPositions();
                     for (AutocompleteListWidget.Entry entry : autocompleteResults) {
                         this.autocompleteListWidget.addEntry(entry);
                     }
-                    DimensionSpecificCustomizableListWidgetScreen.this.addDrawableChild(this.autocompleteListWidget);
+                    DimensionSpecificCustomizableListWidgetScreen.this.addRenderableWidget(this.autocompleteListWidget);
                     DimensionSpecificCustomizableListWidgetScreen.this.hideWidgetsForAutocompleteBox();
                 } else {
                     this.autocompleteListWidget.replaceEntries(autocompleteResults);
