@@ -2,18 +2,18 @@ package net.spacerulerwill.skygrid_reloaded.ui.screen;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.CheckerboardBiomeSource;
-import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGeneratorConfig;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
 
@@ -24,24 +24,24 @@ import java.util.Optional;
 import java.util.Set;
 
 @Environment(EnvType.CLIENT)
-public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetScreen<SelectBiomesScreen.BiomeListWidgetEntry, RegistryEntry<Biome>> {
+public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetScreen<SelectBiomesScreen.BiomeListWidgetEntry, Holder<Biome>> {
     private final Registry<Biome> biomeRegistry;
 
-    public SelectBiomesScreen(CustomizeSkyGridScreen parent, Registry<Biome> biomeRegistry, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.biomes"), Text.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
+    public SelectBiomesScreen(CustomizeSkyGridScreen parent, Registry<Biome> biomeRegistry, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.biomes"), Component.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
         this.biomeRegistry = biomeRegistry;
     }
 
     private SkyGridChunkGeneratorConfig getConfig() {
         SkyGridChunkGeneratorConfig config;
-        if (this.currentDimension == DimensionOptions.OVERWORLD) {
+        if (this.currentDimension == LevelStem.OVERWORLD) {
             config = this.currentConfig.overworldConfig();
-        } else if (this.currentDimension == DimensionOptions.NETHER) {
+        } else if (this.currentDimension == LevelStem.NETHER) {
             config = this.currentConfig.netherConfig();
-        } else if (this.currentDimension == DimensionOptions.END) {
+        } else if (this.currentDimension == LevelStem.END) {
             config = this.currentConfig.endConfig();
         } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
+            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
         }
         return config;
     }
@@ -49,20 +49,20 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
     @Override
     protected void onClear() {
         SkyGridChunkGeneratorConfig currentConfig = this.getConfig();
-        CheckerboardBiomeSource currentBiomeSouurce = currentConfig.checkerboardBiomeSource;
-        this.getConfig().checkerboardBiomeSource = new CheckerboardBiomeSource(
-                RegistryEntryList.of(),
-                currentBiomeSouurce.scale
+        CheckerboardColumnBiomeSource currentBiomeSouurce = currentConfig.checkerboardBiomeSource;
+        this.getConfig().checkerboardBiomeSource = new CheckerboardColumnBiomeSource(
+                HolderSet.direct(),
+                currentBiomeSouurce.size
         );
     }
 
     @Override
-    protected Optional<RegistryEntry<Biome>> getThingFromString(String text) {
+    protected Optional<Holder<Biome>> getThingFromString(String text) {
         try {
             return this.biomeRegistry
-                    .getOptionalValue(Identifier.of(text))
-                    .map(this.biomeRegistry::getEntry);
-        } catch (InvalidIdentifierException e) {
+                    .getOptional(ResourceLocation.parse(text))
+                    .map(this.biomeRegistry::wrapAsHolder);
+        } catch (ResourceLocationException e) {
             return Optional.empty();
         }
     }
@@ -75,56 +75,56 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
             return results;
         }
         this.biomeRegistry.forEach(biome -> {
-            String key = this.biomeRegistry.getKey(biome).get().getValue().toTranslationKey("biome");
-            String displayString = Text.translatable(key).getString();
-            String valueString = this.biomeRegistry.getEntry(biome).getIdAsString();
+            String key = this.biomeRegistry.getResourceKey(biome).get().location().toLanguageKey("biome");
+            String displayString = Component.translatable(key).getString();
+            String valueString = this.biomeRegistry.wrapAsHolder(biome).getRegisteredName();
 
             if (displayString.trim().toLowerCase().startsWith(text) || valueString.startsWith(text)) {
-                results.add(new AutocompleteListWidget.Entry(null, displayString, valueString, this.textRenderer));
+                results.add(new AutocompleteListWidget.Entry(null, displayString, valueString, this.font));
             }
         });
         return results;
     }
 
     @Override
-    protected void onAdd(RegistryEntry<Biome> thing) {
+    protected void onAdd(Holder<Biome> thing) {
         SkyGridChunkGeneratorConfig config = this.getConfig();
-        if (config.checkerboardBiomeSource.getBiomes().contains(thing)) {
+        if (config.checkerboardBiomeSource.possibleBiomes().contains(thing)) {
             throw new IllegalStateException("Add button called while item to add is already present");
         }
-        CheckerboardBiomeSource currentBiomeSource = config.checkerboardBiomeSource;
-        Set<RegistryEntry<Biome>> biomes = new LinkedHashSet<>(currentBiomeSource.getBiomes());
+        CheckerboardColumnBiomeSource currentBiomeSource = config.checkerboardBiomeSource;
+        Set<Holder<Biome>> biomes = new LinkedHashSet<>(currentBiomeSource.possibleBiomes());
         biomes.add(thing);
-        config.checkerboardBiomeSource = new CheckerboardBiomeSource(
-                RegistryEntryList.of(biomes.stream().toList()),
-                currentBiomeSource.scale
+        config.checkerboardBiomeSource = new CheckerboardColumnBiomeSource(
+                HolderSet.direct(biomes.stream().toList()),
+                currentBiomeSource.size
         );
         this.listWidget.addEntry(new SelectBiomesScreen.BiomeListWidgetEntry(thing));
     }
 
     @Override
-    protected boolean canAdd(RegistryEntry<Biome> thing) {
-        return !this.getConfig().checkerboardBiomeSource.getBiomes().contains(thing);
+    protected boolean canAdd(Holder<Biome> thing) {
+        return !this.getConfig().checkerboardBiomeSource.possibleBiomes().contains(thing);
     }
 
 
     @Override
     protected void onDelete(BiomeListWidgetEntry entry) {
         SkyGridChunkGeneratorConfig currentConfig = this.getConfig();
-        CheckerboardBiomeSource currentBiomeSource = currentConfig.checkerboardBiomeSource;
-        Set<RegistryEntry<Biome>> biomes = new LinkedHashSet<>(currentBiomeSource.getBiomes());
+        CheckerboardColumnBiomeSource currentBiomeSource = currentConfig.checkerboardBiomeSource;
+        Set<Holder<Biome>> biomes = new LinkedHashSet<>(currentBiomeSource.possibleBiomes());
         biomes.remove(entry.biome);
-        this.getConfig().checkerboardBiomeSource = new CheckerboardBiomeSource(
-                RegistryEntryList.of(biomes.stream().toList()),
-                currentBiomeSource.scale
+        this.getConfig().checkerboardBiomeSource = new CheckerboardColumnBiomeSource(
+                HolderSet.direct(biomes.stream().toList()),
+                currentBiomeSource.size
         );
     }
 
     @Override
     protected List<SelectBiomesScreen.BiomeListWidgetEntry> getEntriesFromConfig() {
         List<SelectBiomesScreen.BiomeListWidgetEntry> entries = new ArrayList<>();
-        Set<RegistryEntry<Biome>> biomes = this.getConfig().checkerboardBiomeSource.getBiomes();
-        for (RegistryEntry<Biome> biome : biomes) {
+        Set<Holder<Biome>> biomes = this.getConfig().checkerboardBiomeSource.possibleBiomes();
+        for (Holder<Biome> biome : biomes) {
             entries.add(new BiomeListWidgetEntry(biome));
         }
         return entries;
@@ -132,22 +132,22 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
 
 
     @Environment(EnvType.CLIENT)
-    protected class BiomeListWidgetEntry extends AlwaysSelectedEntryListWidget.Entry<BiomeListWidgetEntry> {
-        private final RegistryEntry<Biome> biome;
+    protected class BiomeListWidgetEntry extends ObjectSelectionList.Entry<BiomeListWidgetEntry> {
+        private final Holder<Biome> biome;
 
-        public BiomeListWidgetEntry(RegistryEntry<Biome> biome) {
+        public BiomeListWidgetEntry(Holder<Biome> biome) {
             this.biome = biome;
         }
 
         @Override
-        public Text getNarration() {
-            return Text.empty();
+        public Component getNarration() {
+            return Component.empty();
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            String key = this.biome.getKey().get().getValue().toTranslationKey("biome");
-            context.drawText(SelectBiomesScreen.this.textRenderer, Text.translatable(key), x + 3, y + 2, 16777215, false);
+        public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            String key = this.biome.unwrapKey().get().location().toLanguageKey("biome");
+            context.drawString(SelectBiomesScreen.this.font, Component.translatable(key), x + 3, y + 2, 16777215, false);
         }
     }
 }

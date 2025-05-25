@@ -2,18 +2,18 @@ package net.spacerulerwill.skygrid_reloaded.ui.widget;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 @Environment(EnvType.CLIENT)
-public abstract class WeightSlider extends SliderWidget {
+public abstract class WeightSlider extends AbstractSliderButton {
     private final double minValue;
     private final double maxValue;
-    private final Text text;
+    private final Component text;
 
-    public WeightSlider(int x, int y, int width, int height, Text text, double minValue, double maxValue, double initialValue) {
-        super(x, y, width, height, Text.empty(), 0.0);
+    public WeightSlider(int x, int y, int width, int height, Component text, double minValue, double maxValue, double initialValue) {
+        super(x, y, width, height, Component.empty(), 0.0);
         this.value = (initialValue - minValue) / (maxValue - minValue);
         this.text = text;
         this.minValue = minValue;
@@ -21,12 +21,12 @@ public abstract class WeightSlider extends SliderWidget {
         this.updateMessage();
     }
 
-    private MutableText createMessage() {
+    private MutableComponent createMessage() {
         double weight = getWeight();
         String formattedValue = String.format("%.2f", weight);
         return this.text.copy()
-                .append(Text.literal(": "))
-                .append(Text.literal(formattedValue));
+                .append(Component.literal(": "))
+                .append(Component.literal(formattedValue));
     }
 
     private double getWeight() {

@@ -8,21 +8,21 @@ import com.mojang.serialization.JsonOps;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.Block;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
-import net.minecraft.client.gui.widget.ThreePartsLayoutWidget;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.item.Item;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.layouts.LinearLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.spacerulerwill.skygrid_reloaded.SkyGridReloaded;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.TextField;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
@@ -41,70 +41,68 @@ import java.util.Random;
 
 @Environment(EnvType.CLIENT)
 public class SkyGridPresetsScreen extends Screen {
-    private final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this, 33, 64);
+    private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this, 33, 64);
     private final CustomizeSkyGridScreen parent;
-    private final MinecraftClient client;
-    private final DynamicRegistryManager.Immutable dynamicRegistryManager;
+    private final RegistryAccess.Frozen dynamicRegistryManager;
     private TextField textField;
-    private ButtonWidget selectPresetButton;
-    private ButtonWidget savePresetButton;
+    private Button selectPresetButton;
+    private Button savePresetButton;
     private SkyGridPresetListWidget listWidget;
 
-    protected SkyGridPresetsScreen(MinecraftClient client, CustomizeSkyGridScreen parent, DynamicRegistryManager.Immutable dynamicRegistryManager) {
-        super(Text.translatable("createWorld.customize.skygrid.presets"));
-        this.client = client;
+    protected SkyGridPresetsScreen(CustomizeSkyGridScreen parent, RegistryAccess.Frozen dynamicRegistryManager) {
+        super(Component.translatable("createWorld.customize.skygrid.presets"));
         this.parent = parent;
         this.dynamicRegistryManager = dynamicRegistryManager;
         SkyGridReloaded.reloadCustomPresets(this.dynamicRegistryManager);
     }
 
     protected void init() {
-        this.layout.addHeader(this.title, this.textRenderer);
-        this.listWidget = this.layout.addBody(new SkyGridPresetListWidget());
-        DirectionalLayoutWidget rows = DirectionalLayoutWidget.vertical().spacing(4);
-        DirectionalLayoutWidget row1 = DirectionalLayoutWidget.horizontal().spacing(8);
-        this.selectPresetButton = row1.add(ButtonWidget.builder(Text.translatable("createWorld.skygrid.customize.presets.select"), (buttonWidget) -> {
-            SkyGridPresetListWidget.SkyGridPresetEntry entry = this.listWidget.getSelectedOrNull();
+        this.layout.addTitleHeader(this.title, this.font);
+        this.listWidget = this.layout.addToContents(new SkyGridPresetListWidget());
+        LinearLayout rows = LinearLayout.vertical().spacing(4);
+        LinearLayout row1 = LinearLayout.horizontal().spacing(8);
+        this.selectPresetButton = row1.addChild(Button.builder(Component.translatable("createWorld.skygrid.customize.presets.select"), (buttonWidget) -> {
+            SkyGridPresetListWidget.SkyGridPresetEntry entry = this.listWidget.getSelected();
             this.parent.setConfigFromPreset(entry.preset);
             this.parent.updateBiomeScaleSlider();
-            this.client.setScreen(this.parent);
+            this.minecraft.setScreen(this.parent);
         }).build());
-        row1.add(ButtonWidget.builder(ScreenTexts.CANCEL, (button) -> {
-            this.client.setScreen(this.parent);
+        row1.addChild(Button.builder(CommonComponents.GUI_CANCEL, (button) -> {
+            this.minecraft.setScreen(this.parent);
         }).build());
-        rows.add(row1);
-        DirectionalLayoutWidget row2 = DirectionalLayoutWidget.horizontal().spacing(8);
-        this.textField = row2.add(new PresetsTextField());
-        this.savePresetButton = row2.add(ButtonWidget.builder(Text.translatable("createWorld.skygrid.customize.presets.save"), (buttonWidget) -> {
-            this.savePreset(this.textField.getText());
+        rows.addChild(row1);
+        LinearLayout row2 = LinearLayout.horizontal().spacing(8);
+        this.textField = row2.addChild(new PresetsTextField());
+        this.savePresetButton = row2.addChild(Button.builder(Component.translatable("createWorld.skygrid.customize.presets.save"), (buttonWidget) -> {
+            this.savePreset(this.textField.getValue());
         }).build());
-        rows.add(row2);
-        rows.forEachChild(this::addDrawableChild);
-        this.layout.addFooter(rows);
-        this.layout.forEachChild(this::addDrawableChild);
+        rows.addChild(row2);
+        rows.visitWidgets(this::addRenderableWidget);
+        this.layout.addToFooter(rows);
+        this.layout.visitWidgets(this::addRenderableWidget);
         this.updateSelectPresetButtonActive();
-        this.refreshWidgetPositions();
+        this.repositionElements();
         this.updateSaveButtonActive();
     }
 
     private void updateSaveButtonActive() {
-        this.savePresetButton.active = !this.textField.getText().isEmpty();
+        this.savePresetButton.active = !this.textField.getValue().isEmpty();
     }
 
-    protected void refreshWidgetPositions() {
+    protected void repositionElements() {
         if (this.listWidget != null) {
-            this.listWidget.position(this.width, this.layout);
+            this.listWidget.updateSize(this.width, this.layout);
         }
-        this.layout.refreshPositions();
+        this.layout.arrangeElements();
     }
 
     public void updateSelectPresetButtonActive() {
-        this.selectPresetButton.active = this.listWidget.getSelectedOrNull() != null;
+        this.selectPresetButton.active = this.listWidget.getSelected() != null;
     }
 
     @Override
-    public void close() {
-        this.client.setScreen(this.parent);
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
     }
 
     private void savePreset(String name) {
@@ -137,7 +135,7 @@ public class SkyGridPresetsScreen extends Screen {
             SkyGridPreset preset = new SkyGridPreset(icon, name, currentConfig);
             // Encode it as json
             JsonElement element = new JsonObject();
-            DynamicOps<JsonElement> ops = RegistryOps.of(JsonOps.INSTANCE, this.dynamicRegistryManager);
+            DynamicOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, this.dynamicRegistryManager);
             DataResult<JsonElement> json = SkyGridPreset.CODEC.encode(preset, ops, element);
             String jsonString = json.getOrThrow().toString();
             // Write json to file
@@ -154,9 +152,9 @@ public class SkyGridPresetsScreen extends Screen {
     }
 
     @Environment(EnvType.CLIENT)
-    private class SkyGridPresetListWidget extends AlwaysSelectedEntryListWidget<SkyGridPresetListWidget.SkyGridPresetEntry> {
+    private class SkyGridPresetListWidget extends ObjectSelectionList<SkyGridPresetListWidget.SkyGridPresetEntry> {
         public SkyGridPresetListWidget() {
-            super(SkyGridPresetsScreen.this.client, SkyGridPresetsScreen.this.width, SkyGridPresetsScreen.this.height - 77, 33, 24);
+            super(SkyGridPresetsScreen.this.minecraft, SkyGridPresetsScreen.this.width, SkyGridPresetsScreen.this.height - 77, 33, 24);
             this.refreshEntries();
         }
 
@@ -178,7 +176,7 @@ public class SkyGridPresetsScreen extends Screen {
 
         @Environment(EnvType.CLIENT)
         public class SkyGridPresetEntry extends Entry<SkyGridPresetEntry> {
-            private static final Identifier SLOT_TEXTURE = Identifier.ofVanilla("container/slot");
+            private static final ResourceLocation SLOT_TEXTURE = ResourceLocation.withDefaultNamespace("container/slot");
             private final SkyGridPreset preset;
 
             public SkyGridPresetEntry(SkyGridPreset preset) {
@@ -186,25 +184,25 @@ public class SkyGridPresetsScreen extends Screen {
             }
 
             @Override
-            public Text getNarration() {
-                return Text.empty();
+            public Component getNarration() {
+                return Component.empty();
             }
 
             @Override
-            public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
-                context.drawItemWithoutEntity(preset.item().getDefaultStack(), x + 2, y + 2);
-                context.drawText(SkyGridPresetsScreen.this.textRenderer, Text.translatable(preset.name()), x + 18 + 5, y + 3, 16777215, false);
+            public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+                context.blitSprite(RenderType::guiTextured, SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
+                context.renderFakeItem(preset.item().getDefaultInstance(), x + 2, y + 2);
+                context.drawString(SkyGridPresetsScreen.this.font, Component.translatable(preset.name()), x + 18 + 5, y + 3, 16777215, false);
             }
         }
 
         @Environment(EnvType.CLIENT)
         public class SkyGridCustomPresetEntry extends SkyGridPresetEntry {
-            private final ButtonWidget deleteButton;
+            private final Button deleteButton;
 
             public SkyGridCustomPresetEntry(SkyGridPreset preset) {
                 super(preset);
-                this.deleteButton = ButtonWidget.builder(Text.translatable("createWorld.skygrid.customize.presets.delete"), button -> {
+                this.deleteButton = Button.builder(Component.translatable("createWorld.skygrid.customize.presets.delete"), button -> {
                     try {
                         MessageDigest digest = MessageDigest.getInstance("SHA-256");
                         byte[] hash = digest.digest(preset.name().getBytes(StandardCharsets.UTF_8));
@@ -221,7 +219,7 @@ public class SkyGridPresetsScreen extends Screen {
             }
 
             @Override
-            public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
+            public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
                 super.render(context, index, y, x, entryWidth, entryHeight, mouseX, mouseY, hovered, tickDelta);
                 this.deleteButton.setX(x + entryWidth - this.deleteButton.getWidth() - 5);
                 this.deleteButton.setY(y);
@@ -243,7 +241,7 @@ public class SkyGridPresetsScreen extends Screen {
     @Environment(EnvType.CLIENT)
     protected class PresetsTextField extends TextField {
         public PresetsTextField() {
-            super(SkyGridPresetsScreen.this.textRenderer, 150, 20, Text.empty());
+            super(SkyGridPresetsScreen.this.font, 150, 20, Component.empty());
         }
 
         @Override

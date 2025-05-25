@@ -1,11 +1,10 @@
 package net.spacerulerwill.skygrid_reloaded.util;
 
-import net.minecraft.world.dimension.DimensionOptions;
-
 import java.util.Optional;
+import net.minecraft.world.level.dimension.LevelStem;
 
 public interface WorldPresetExtension {
-    Optional<DimensionOptions> skygrid$GetNether();
+    Optional<LevelStem> skygrid$GetNether();
 
-    Optional<DimensionOptions> skygrid$GetEnd();
+    Optional<LevelStem> skygrid$GetEnd();
 }
