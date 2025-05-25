@@ -1,5 +1,0 @@
-accessWidener v2 named
-accessible method net/minecraft/client/gui/components/AbstractSelectionList addEntry (Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;)I
-accessible method net/minecraft/client/gui/components/AbstractSelectionList clearEntries ()V
-accessible method net/minecraft/client/gui/components/AbstractSelectionList removeEntry (Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;)Z
-accessible field net/minecraft/world/level/biome/CheckerboardColumnBiomeSource size I
