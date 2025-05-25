@@ -7,12 +7,12 @@ import com.mojang.serialization.JsonOps;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGenerator;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridPreset;
 import org.slf4j.Logger;
@@ -33,14 +33,14 @@ public class SkyGridReloaded implements ModInitializer {
     public static ArrayList<SkyGridPreset> CUSTOM_PRESETS = new ArrayList<>();
     public static SkyGridPreset DEFAULT_PRESET;
 
-    private static SkyGridPreset loadCustomPreset(Path filepath, RegistryWrapper.WrapperLookup wrapperLookup) throws IOException {
+    private static SkyGridPreset loadCustomPreset(Path filepath, HolderLookup.Provider wrapperLookup) throws IOException {
         String fileContent = Files.readString(filepath);
         JsonElement json = JsonParser.parseString(fileContent);
-        DynamicOps<JsonElement> ops = RegistryOps.of(JsonOps.INSTANCE, wrapperLookup);
+        DynamicOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, wrapperLookup);
         return SkyGridPreset.CODEC.parse(ops, json).getOrThrow();
     }
 
-    public static void reloadCustomPresets(RegistryWrapper.WrapperLookup wrapperLookup) {
+    public static void reloadCustomPresets(HolderLookup.Provider wrapperLookup) {
         CUSTOM_PRESETS.clear();
         LOGGER.debug("Loading custom presets");
         Path configDir = FabricLoader.getInstance().getConfigDir();
@@ -79,8 +79,8 @@ public class SkyGridReloaded implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Registry.register(Registries.CHUNK_GENERATOR, Identifier.of(MOD_ID, "skygrid"), SkyGridChunkGenerator.MAP_CODEC);
-        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(PresetsReloadListener.FABRIC_ID, PresetsReloadListener::new);
+        Registry.register(BuiltInRegistries.CHUNK_GENERATOR, ResourceLocation.fromNamespaceAndPath(MOD_ID, "skygrid"), SkyGridChunkGenerator.MAP_CODEC);
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(PresetsReloadListener.FABRIC_ID, PresetsReloadListener::new);
         LOGGER.info("SkyGrid mod is initialised!");
     }
 }

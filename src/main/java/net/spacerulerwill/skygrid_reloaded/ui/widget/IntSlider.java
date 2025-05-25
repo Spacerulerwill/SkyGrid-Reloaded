@@ -2,21 +2,20 @@ package net.spacerulerwill.skygrid_reloaded.ui.widget;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.widget.SliderWidget;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import java.util.function.Consumer;
 
 @Environment(EnvType.CLIENT)
-public class IntSlider extends SliderWidget {
+public class IntSlider extends AbstractSliderButton {
     private final int minValue;
     private final int maxValue;
-    private final Text text;
+    private final Component text;
     private final Consumer<Integer> onValueChanged;
 
-    public IntSlider(int x, int y, int width, int height, Text text, int minValue, int maxValue, int initialValue, Consumer<Integer> onValueChanged) {
-        super(x, y, width, height, Text.empty(), 0.0);
+    public IntSlider(int x, int y, int width, int height, Component text, int minValue, int maxValue, int initialValue, Consumer<Integer> onValueChanged) {
+        super(x, y, width, height, Component.empty(), 0.0);
         this.minValue = minValue;
         this.maxValue = maxValue;
         this.text = text;
@@ -41,11 +40,11 @@ public class IntSlider extends SliderWidget {
         this.setMessage(this.createMessage());
     }
 
-    private MutableText createMessage() {
+    private MutableComponent createMessage() {
         int currentValue = getIntValue();
         return this.text.copy()
-                .append(Text.literal(": "))
-                .append(Text.literal(String.valueOf(currentValue)));
+                .append(Component.literal(": "))
+                .append(Component.literal(String.valueOf(currentValue)));
     }
 
     private int getIntValue() {

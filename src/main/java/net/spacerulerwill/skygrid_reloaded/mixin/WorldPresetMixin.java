@@ -1,7 +1,7 @@
 package net.spacerulerwill.skygrid_reloaded.mixin;
 
-import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.gen.WorldPreset;
+import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import net.spacerulerwill.skygrid_reloaded.util.WorldPresetExtension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -16,15 +16,15 @@ There was already one implemented for the overworld, but I needed these 2 also.
 @Mixin(WorldPreset.class)
 public class WorldPresetMixin implements WorldPresetExtension {
     @Shadow
-    private Map<DimensionOptions, DimensionOptions> dimensions;
+    private Map<LevelStem, LevelStem> dimensions;
 
     @Override
-    public Optional<DimensionOptions> skygrid$GetNether() {
-        return Optional.ofNullable(dimensions.get(DimensionOptions.NETHER));
+    public Optional<LevelStem> skygrid$GetNether() {
+        return Optional.ofNullable(dimensions.get(LevelStem.NETHER));
     }
 
     @Override
-    public Optional<DimensionOptions> skygrid$GetEnd() {
-        return Optional.ofNullable(dimensions.get(DimensionOptions.END));
+    public Optional<LevelStem> skygrid$GetEnd() {
+        return Optional.ofNullable(dimensions.get(LevelStem.END));
     }
 }

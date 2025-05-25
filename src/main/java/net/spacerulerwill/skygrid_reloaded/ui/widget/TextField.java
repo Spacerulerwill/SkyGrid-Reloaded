@@ -1,12 +1,12 @@
 package net.spacerulerwill.skygrid_reloaded.ui.widget;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
-public abstract class TextField extends TextFieldWidget {
-    public TextField(TextRenderer textRenderer, int width, int height, Text text) {
+public abstract class TextField extends EditBox {
+    public TextField(Font textRenderer, int width, int height, Component text) {
         super(textRenderer, width, height, text);
     }
 
@@ -18,8 +18,8 @@ public abstract class TextField extends TextFieldWidget {
     }
 
     @Override
-    public void setText(String text) {
-        super.setText(text);
+    public void setValue(String text) {
+        super.setValue(text);
         this.onTextChanged();
     }
 

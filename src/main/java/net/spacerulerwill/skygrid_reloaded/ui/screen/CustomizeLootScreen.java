@@ -2,14 +2,14 @@ package net.spacerulerwill.skygrid_reloaded.ui.screen;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
-import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.WeightSliderListWidgetEntry;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
 
@@ -23,8 +23,8 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     private static final double MIN_ITEM_WEIGHT = 0;
     private static final double MAX_ITEM_WEIGHT = 100;
 
-    public CustomizeLootScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.loot"), Text.translatable("createWorld.customize.loot.placeholder"), 25);
+    public CustomizeLootScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.loot"), Component.translatable("createWorld.customize.loot.placeholder"), 25);
     }
 
     @Override
@@ -36,8 +36,8 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     @Override
     protected Optional<Item> getThingFromString(String text) {
         try {
-            return Registries.ITEM.getOrEmpty(Identifier.of(text));
-        } catch (InvalidIdentifierException e) {
+            return BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(text));
+        } catch (ResourceLocationException e) {
             return Optional.empty();
         }
     }
@@ -48,13 +48,13 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
         if (text.isBlank()) {
             return results;
         }
-        Registries.ITEM.forEach(item -> {
+        BuiltInRegistries.ITEM.forEach(item -> {
             if (item == Items.AIR) return;
 
-            String displayString = Text.translatable(item.getTranslationKey()).getString();
-            String valueString = Registries.ITEM.getId(item).toString();
+            String displayString = Component.translatable(item.getDescriptionId()).getString();
+            String valueString = BuiltInRegistries.ITEM.getKey(item).toString();
             if (displayString.trim().toLowerCase().startsWith(text) || valueString.startsWith(text)) {
-                results.add(new AutocompleteListWidget.Entry(item, displayString, valueString, this.textRenderer));
+                results.add(new AutocompleteListWidget.Entry(item, displayString, valueString, this.font));
             }
         });
         return results;
@@ -83,14 +83,14 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
 
     private Map<Item, Double> getChestItems() {
         Map<Item, Double> items;
-        if (this.currentDimension == DimensionOptions.OVERWORLD) {
+        if (this.currentDimension == LevelStem.OVERWORLD) {
             items = this.currentConfig.overworldConfig().chestItems;
-        } else if (this.currentDimension == DimensionOptions.NETHER) {
+        } else if (this.currentDimension == LevelStem.NETHER) {
             items = this.currentConfig.netherConfig().chestItems;
-        } else if (this.currentDimension == DimensionOptions.END) {
+        } else if (this.currentDimension == LevelStem.END) {
             items = this.currentConfig.endConfig().chestItems;
         } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
+            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
         }
         return items;
     }
@@ -112,12 +112,12 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
         private final Item item;
 
         public ItemWeightListEntry(Item item) {
-            super(item.getName(), MIN_ITEM_WEIGHT, MAX_ITEM_WEIGHT, INITIAL_ITEM_WEIGHT);
+            super(item.getDescription(), MIN_ITEM_WEIGHT, MAX_ITEM_WEIGHT, INITIAL_ITEM_WEIGHT);
             this.item = item;
         }
 
         public ItemWeightListEntry(Item item, double initialWeight) {
-            super(item.getName(), MIN_ITEM_WEIGHT, MAX_ITEM_WEIGHT, initialWeight);
+            super(item.getDescription(), MIN_ITEM_WEIGHT, MAX_ITEM_WEIGHT, initialWeight);
             this.item = item;
         }
 

@@ -2,16 +2,16 @@ package net.spacerulerwill.skygrid_reloaded.ui.screen;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.InvalidIdentifierException;
-import net.minecraft.world.dimension.DimensionOptions;
+import net.minecraft.ResourceLocationException;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.WeightSliderListWidgetEntry;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
 
@@ -25,8 +25,8 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     private static final double MIN_BLOCK_WEIGHT = 0;
     private static final double MAX_BLOCK_WEIGHT = 500;
 
-    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, RegistryKey<DimensionOptions> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Text.translatable("createWorld.customize.skygrid.blocks"), Text.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
+    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.blocks"), Component.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
     }
 
     private static Item getBlockItem(Block block) {
@@ -48,8 +48,8 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     @Override
     protected Optional<Block> getThingFromString(String text) {
         try {
-            return Registries.BLOCK.getOrEmpty(Identifier.of(text));
-        } catch (InvalidIdentifierException e) {
+            return BuiltInRegistries.BLOCK.getOptional(ResourceLocation.parse(text));
+        } catch (ResourceLocationException e) {
             return Optional.empty();
         }
     }
@@ -60,11 +60,11 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
         if (text.isBlank()) {
             return results;
         }
-        Registries.BLOCK.forEach(block -> {
-            String displayString = Text.translatable(block.getTranslationKey()).getString();
-            String valueString = Registries.BLOCK.getId(block).toString();
+        BuiltInRegistries.BLOCK.forEach(block -> {
+            String displayString = Component.translatable(block.getDescriptionId()).getString();
+            String valueString = BuiltInRegistries.BLOCK.getKey(block).toString();
             if (displayString.trim().toLowerCase().startsWith(text) || valueString.startsWith(text)) {
-                results.add(new AutocompleteListWidget.Entry(getBlockItem(block), displayString, valueString, this.textRenderer));
+                results.add(new AutocompleteListWidget.Entry(getBlockItem(block), displayString, valueString, this.font));
             }
         });
         return results;
@@ -93,14 +93,14 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
 
     private Map<Block, Double> getCurrentBlocks() {
         Map<Block, Double> blocks;
-        if (this.currentDimension == DimensionOptions.OVERWORLD) {
+        if (this.currentDimension == LevelStem.OVERWORLD) {
             blocks = this.currentConfig.overworldConfig().blocks;
-        } else if (this.currentDimension == DimensionOptions.NETHER) {
+        } else if (this.currentDimension == LevelStem.NETHER) {
             blocks = this.currentConfig.netherConfig().blocks;
-        } else if (this.currentDimension == DimensionOptions.END) {
+        } else if (this.currentDimension == LevelStem.END) {
             blocks = this.currentConfig.endConfig().blocks;
         } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.getValue().toTranslationKey());
+            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
         }
         return blocks;
     }
