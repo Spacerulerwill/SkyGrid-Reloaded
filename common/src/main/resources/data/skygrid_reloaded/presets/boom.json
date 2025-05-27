@@ -2,54 +2,56 @@
   "item": "minecraft:tnt",
   "name": "Boom!",
   "config": {
-    "overworld_config": {
-      "blocks": {
-        "minecraft:tnt": 100,
-        "minecraft:spawner": 1
+    "dimensions": {
+      "minecraft:overworld": {
+        "blocks": {
+          "minecraft:tnt": 100,
+          "minecraft:spawner": 1
+        },
+        "spawner_entities": [
+          "minecraft:creeper"
+        ],
+        "chest_items": {},
+        "checkerboard": {
+          "scale": 1,
+          "biomes": [
+            "minecraft:the_void"
+          ]
+        }
       },
-      "spawner_entities": [
-        "minecraft:creeper"
-      ],
-      "chest_items": {},
-      "checkerboard": {
-        "scale": 1,
-        "biomes": [
-          "minecraft:the_void"
-        ]
-      }
-    },
-    "nether_config": {
-      "blocks": {
-        "minecraft:tnt": 100,
-        "minecraft:spawner": 1
+      "minecraft:the_nether": {
+        "blocks": {
+          "minecraft:tnt": 100,
+          "minecraft:spawner": 1
+        },
+        "spawner_entities": [
+          "minecraft:blaze",
+          "minecraft:ghast"
+        ],
+        "chest_items": {},
+        "checkerboard": {
+          "scale": 1,
+          "biomes": [
+            "minecraft:the_void"
+          ]
+        }
       },
-      "spawner_entities": [
-        "minecraft:blaze",
-        "minecraft:ghast"
-      ],
-      "chest_items": {},
-      "checkerboard": {
-        "scale": 1,
-        "biomes": [
-          "minecraft:the_void"
-        ]
-      }
-    },
-    "end_config": {
-      "blocks": {
-        "minecraft:tnt": 100,
-        "minecraft:spawner": 1
-      },
-      "spawner_entities": [
-        "minecraft:endermite",
-        "minecraft:enderman"
-      ],
-      "chest_items": {},
-      "checkerboard": {
-        "scale": 1,
-        "biomes": [
-          "minecraft:the_void"
-        ]
+      "minecraft:the_end": {
+        "blocks": {
+          "minecraft:tnt": 100,
+          "minecraft:spawner": 1
+        },
+        "spawner_entities": [
+          "minecraft:endermite",
+          "minecraft:enderman"
+        ],
+        "chest_items": {},
+        "checkerboard": {
+          "scale": 1,
+          "biomes": [
+            "minecraft:the_void"
+          ]
+        }
       }
     }
   }

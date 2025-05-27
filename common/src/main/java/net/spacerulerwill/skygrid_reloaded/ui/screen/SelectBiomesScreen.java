@@ -25,23 +25,13 @@ import java.util.Set;
 public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetScreen<SelectBiomesScreen.BiomeListWidgetEntry, Holder<Biome>> {
     private final Registry<Biome> biomeRegistry;
 
-    public SelectBiomesScreen(CustomizeSkyGridScreen parent, Registry<Biome> biomeRegistry, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.biomes"), Component.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
+    public SelectBiomesScreen(CustomizeSkyGridScreen parent, Registry<Biome> biomeRegistry, List<ResourceKey<LevelStem>> dimensions, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, dimensions, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.biomes"), Component.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
         this.biomeRegistry = biomeRegistry;
     }
 
     private SkyGridChunkGeneratorConfig getConfig() {
-        SkyGridChunkGeneratorConfig config;
-        if (this.currentDimension == LevelStem.OVERWORLD) {
-            config = this.currentConfig.overworldConfig();
-        } else if (this.currentDimension == LevelStem.NETHER) {
-            config = this.currentConfig.netherConfig();
-        } else if (this.currentDimension == LevelStem.END) {
-            config = this.currentConfig.endConfig();
-        } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
-        }
-        return config;
+        return this.currentConfig.dimensions.get(this.currentDimension);
     }
 
     @Override

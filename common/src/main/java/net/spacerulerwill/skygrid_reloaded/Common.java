@@ -33,8 +33,19 @@ public class Common {
         String fileContent = Files.readString(filepath);
         JsonElement json = JsonParser.parseString(fileContent);
         DynamicOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, wrapperLookup);
-        return SkyGridPreset.CODEC.parse(ops, json).getOrThrow();
+
+        try {
+            return SkyGridPreset.CODEC_V1.parse(ops, json).getOrThrow();
+        } catch (Exception e1) {
+            try {
+                return SkyGridPreset.CODEC_V2.parse(ops, json).getOrThrow();
+            } catch (Exception e2) {
+                e2.addSuppressed(e1);
+                throw new IOException("Failed to parse preset " + filepath + ": ", e2);
+            }
+        }
     }
+
 
     public static void reloadCustomPresets(HolderLookup.Provider wrapperLookup) {
         Common.CUSTOM_PRESETS.clear();
@@ -85,7 +96,7 @@ public class Common {
             try (InputStream stream = resource.open()) {
                 Constants.LOGGER.debug("Loading preset {}", identifier);
                 JsonElement json = JsonParser.parseString(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
-                SkyGridPreset preset = SkyGridPreset.CODEC.parse(ops, json).getOrThrow();
+                SkyGridPreset preset = SkyGridPreset.CODEC_V2.parse(ops, json).getOrThrow();
                 Common.PRESETS.add(preset);
                 if (identifier.equals(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "presets/modern.json"))) {
                     Common.DEFAULT_PRESET = preset;
