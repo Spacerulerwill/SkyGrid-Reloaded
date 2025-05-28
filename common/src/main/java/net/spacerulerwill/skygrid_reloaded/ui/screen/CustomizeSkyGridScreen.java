@@ -1,6 +1,6 @@
 package net.spacerulerwill.skygrid_reloaded.ui.screen;
 
-import com.google.common.collect.ImmutableMap;
+import com.mojang.serialization.Lifecycle;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -11,38 +11,35 @@ import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationContext;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource;
-import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.WorldDimensions;
-import net.minecraft.world.level.levelgen.presets.WorldPreset;
-import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.ClickableWidgetList;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.IntSlider;
 import net.spacerulerwill.skygrid_reloaded.util.CheckerboardColumnBiomeSourceSizeAccessor;
-import net.spacerulerwill.skygrid_reloaded.util.WorldPresetExtension;
+import net.spacerulerwill.skygrid_reloaded.util.CreateWorldScreenExtension;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGenerator;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGeneratorConfig;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridPreset;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import static net.spacerulerwill.skygrid_reloaded.Common.DEFAULT_PRESET;
 
 public class CustomizeSkyGridScreen extends Screen {
-    public static final List<ResourceKey<LevelStem>> DIMENSIONS = List.of(LevelStem.OVERWORLD, LevelStem.NETHER, LevelStem.END);
+    public static final List<ResourceKey<LevelStem>> VANILLA_DIMENSIONS = List.of(LevelStem.OVERWORLD, LevelStem.NETHER, LevelStem.END);
 
     private static final Component TITLE_TEXT = Component.translatable("createWorld.customize.skygrid.title");
     private static final Component BLOCKS_TEXT = Component.translatable("createWorld.customize.skygrid.blocks");
@@ -55,9 +52,10 @@ public class CustomizeSkyGridScreen extends Screen {
     private final HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
     private final CreateWorldScreen parent;
     private final IntSlider biomeScaleSlider;
+    private final List<ResourceKey<LevelStem>> dimensions;
     private ClickableWidgetList body;
     private CycleButton<ResourceKey<LevelStem>> dimensionsSelector;
-    private SkyGridConfig currentConfig = new SkyGridConfig(DEFAULT_PRESET.config());
+    private SkyGridConfig currentConfig = new SkyGridConfig(DEFAULT_PRESET.config);
     private ResourceKey<LevelStem> currentDimension = LevelStem.OVERWORLD;
 
     public CustomizeSkyGridScreen(CreateWorldScreen parent) {
@@ -70,25 +68,39 @@ public class CustomizeSkyGridScreen extends Screen {
                     newValue
             );
         });
+
+        // all our dimensions
+        this.dimensions = this.getAllDimensions();
+        // add empty configs for any dimensions not specified
+        this.ensureAllDimensionsHaveConfigs();
     }
 
     private SkyGridChunkGeneratorConfig getCurrentConfig() {
-        SkyGridChunkGeneratorConfig config;
-        if (this.currentDimension == LevelStem.OVERWORLD) {
-            config = this.currentConfig.overworldConfig();
-        } else if (this.currentDimension == LevelStem.NETHER) {
-            config = this.currentConfig.netherConfig();
-        } else if (this.currentDimension == LevelStem.END) {
-            config = this.currentConfig.endConfig();
-        } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
-        }
-        return config;
+        return this.currentConfig.dimensions.get(this.currentDimension);
     }
 
     public void updateBiomeScaleSlider() {
         this.biomeScaleSlider.setValue(((CheckerboardColumnBiomeSourceSizeAccessor) this.getCurrentConfig().checkerboardBiomeSource).skygrid_reloaded$getSize());
     }
+
+    private List<ResourceKey<LevelStem>> getAllDimensions() {
+        List<ResourceKey<LevelStem>> result = new ArrayList<>();
+        WorldCreationContext worldCreationContext = parent.getUiState().getSettings();
+
+        // Add selected dimensions first, unsorted
+        worldCreationContext.selectedDimensions().dimensions().forEach((levelStemResourceKey, levelStem) -> {
+            result.add(levelStemResourceKey);
+        });
+
+        // Get datapack dimensions, sort them alphabetically, then add
+        List<ResourceKey<LevelStem>> datapackDims = new ArrayList<>(worldCreationContext.datapackDimensions().registryKeySet());
+        datapackDims.sort(Comparator.comparing(key -> key.toString()));
+
+        result.addAll(datapackDims);
+
+        return result;
+    }
+
 
     @Override
     protected void init() {
@@ -96,7 +108,7 @@ public class CustomizeSkyGridScreen extends Screen {
         this.layout.addTitleHeader(TITLE_TEXT, this.font);
         // Body
         List<AbstractWidget> firstRow = List.of(new CycleButton.Builder<ResourceKey<LevelStem>>(value -> Component.translatable(value.location().toLanguageKey()))
-                .withValues(DIMENSIONS)
+                .withValues(this.dimensions)
                 .create(0, 0, 158, 20, Component.translatable("createWorld.customize.skygrid.dimension"), ((button, dimension) -> {
                     this.currentDimension = dimension;
                     this.updateBiomeScaleSlider();
@@ -105,12 +117,12 @@ public class CustomizeSkyGridScreen extends Screen {
         List<AbstractWidget> secondRow = List.of(
                 Button.builder(BLOCKS_TEXT, (button) -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new CustomizeBlocksScreen(this, this.currentDimension, this.currentConfig));
+                        this.minecraft.setScreen(new CustomizeBlocksScreen(this, this.dimensions, this.currentDimension, this.currentConfig));
                     }
                 }).build(),
                 Button.builder(SPAWNERS_TEXT, (button) -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new CustomizeSpawnerScreen(this, this.currentDimension, this.currentConfig));
+                        this.minecraft.setScreen(new CustomizeSpawnerScreen(this, this.dimensions, this.currentDimension, this.currentConfig));
                     }
                 }).build()
         );
@@ -118,7 +130,7 @@ public class CustomizeSkyGridScreen extends Screen {
                 Button.builder(BiOMES_TEXT, (button) -> {
                     if (this.minecraft != null) {
                         Registry<Biome> biomeRegistry = this.parent.getUiState().getSettings().worldgenLoadContext().lookupOrThrow(Registries.BIOME);
-                        this.minecraft.setScreen(new SelectBiomesScreen(this, biomeRegistry, this.currentDimension, this.currentConfig));
+                        this.minecraft.setScreen(new SelectBiomesScreen(this, biomeRegistry, this.dimensions, this.currentDimension, this.currentConfig));
                     }
                 }).build(),
                 this.biomeScaleSlider
@@ -126,7 +138,7 @@ public class CustomizeSkyGridScreen extends Screen {
         List<AbstractWidget> fourthRow = List.of(
                 Button.builder(LOOT_TEXT, (button) -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new CustomizeLootScreen(this, this.currentDimension, this.currentConfig));
+                        this.minecraft.setScreen(new CustomizeLootScreen(this, this.dimensions, this.currentDimension, this.currentConfig));
                     }
                 }).build(),
                 Button.builder(PRESETS_TEXT, (button) -> {
@@ -158,8 +170,17 @@ public class CustomizeSkyGridScreen extends Screen {
         }
     }
 
+    private void ensureAllDimensionsHaveConfigs() {
+        this.dimensions.forEach((levelStemResourceKey) -> {
+            if (!this.currentConfig.dimensions.containsKey(levelStemResourceKey)) {
+                this.currentConfig.dimensions.put(levelStemResourceKey, new SkyGridChunkGeneratorConfig());
+            }
+        });
+    }
+
     public void updateSkyGridConfig(SkyGridConfig config) {
         this.currentConfig = config;
+        this.ensureAllDimensionsHaveConfigs();
     }
 
     public SkyGridConfig getCurrentSkyGridConfig() {
@@ -167,82 +188,53 @@ public class CustomizeSkyGridScreen extends Screen {
     }
 
     private void done() {
-        this.parent.getUiState().updateDimensions(applyChunkCGeneratorConfigs());
+        this.updateDatapackDimensions();
+    }
+
+    private void updateDatapackDimensions() {
+        WorldCreationContext settings = this.parent.getUiState().getSettings();
+        Registry<LevelStem> oldDatapackDimensions = settings.datapackDimensions();
+        MappedRegistry<LevelStem> newDatapackDimensions = new MappedRegistry<>(Registries.LEVEL_STEM, Lifecycle.stable());
+        RegistryAccess.Frozen dynamicRegistryManager = settings.worldgenLoadContext();
+        Registry<Biome> biomeRegistry = dynamicRegistryManager.lookupOrThrow(Registries.BIOME);
+        this.currentConfig.dimensions.forEach((levelStemResourceKey, config) -> {
+            boolean hasNonZeroBlock = config.blocks.values().stream().anyMatch(weight -> weight > 0);
+            if (hasNonZeroBlock) {
+                LevelStem levelStem;
+                if (VANILLA_DIMENSIONS.contains(levelStemResourceKey)) {
+                    levelStem = this.parent.getUiState().getSettings().selectedDimensions().dimensions().get(levelStemResourceKey);
+                } else {
+                    levelStem = oldDatapackDimensions.getValue(levelStemResourceKey);
+                }
+                if (config.checkerboardBiomeSource.possibleBiomes().isEmpty()) {
+                    List<Holder<Biome>> biomes = levelStem.generator().getBiomeSource().possibleBiomes().stream().toList();
+                    config.checkerboardBiomeSource = new CheckerboardColumnBiomeSource(HolderSet.direct(biomes), 1);
+                }
+                DimensionType type = levelStem.type().value();
+                SkyGridChunkGenerator chunkGenerator = new SkyGridChunkGenerator(type.minY(), type.height(), config);
+                LevelStem newLevelStem = new LevelStem(levelStem.type(), chunkGenerator);
+                newDatapackDimensions.register(levelStemResourceKey, newLevelStem, RegistrationInfo.BUILT_IN);
+            } else {
+                newDatapackDimensions.register(levelStemResourceKey, ((CreateWorldScreenExtension) this.parent).skygrid_reloaded$getDefaultLevelStems().get(levelStemResourceKey), RegistrationInfo.BUILT_IN);
+            }
+        });
+
+        settings = parent.getUiState().getSettings();
+        WorldCreationContext worldCreationContext = new WorldCreationContext(
+                settings.options(),
+                newDatapackDimensions,
+                settings.selectedDimensions(),
+                settings.worldgenRegistries(),
+                settings.dataPackResources(),
+                settings.dataConfiguration(),
+                settings.initialWorldCreationOptions()
+        );
+        parent.getUiState().setSettings(worldCreationContext);
     }
 
     public void setConfigFromPreset(SkyGridPreset preset) {
-        this.currentConfig = new SkyGridConfig(preset.config());
-    }
-
-    private WorldCreationContext.DimensionsUpdater applyChunkCGeneratorConfigs() {
-        Map<ResourceKey<LevelStem>, SkyGridChunkGeneratorConfig> dimensionOptionsToChunkGeneratorConfigMap = Map.of(
-                LevelStem.OVERWORLD, currentConfig.overworldConfig(),
-                LevelStem.NETHER, currentConfig.netherConfig(),
-                LevelStem.END, currentConfig.endConfig()
-        );
-
-        return (dynamicRegistryManager, dimensionsRegistryHolder) -> {
-            Registry<NoiseGeneratorSettings> chunkGeneratorSettingsRegistry = dynamicRegistryManager.lookupOrThrow(Registries.NOISE_SETTINGS);
-            Map<ResourceKey<LevelStem>, LevelStem> updatedDimensions = new HashMap<>(dimensionsRegistryHolder.dimensions());
-            dimensionOptionsToChunkGeneratorConfigMap.forEach((dimensionOptionsRegistryKey, config) -> {
-                boolean hasNonZeroBlock = config.blocks.values().stream().anyMatch(weight -> weight > 0);
-                if (hasNonZeroBlock) {
-                    // Chunk generator settings
-                    ResourceKey<NoiseGeneratorSettings> chunkGeneratorSettingsRegistryKey = null;
-                    if (dimensionOptionsRegistryKey == LevelStem.OVERWORLD) {
-                        chunkGeneratorSettingsRegistryKey = NoiseGeneratorSettings.OVERWORLD;
-                    } else if (dimensionOptionsRegistryKey == LevelStem.NETHER) {
-                        chunkGeneratorSettingsRegistryKey = NoiseGeneratorSettings.NETHER;
-                    } else if (dimensionOptionsRegistryKey == LevelStem.END) {
-                        chunkGeneratorSettingsRegistryKey = NoiseGeneratorSettings.END;
-                    }
-
-                    // Biome source
-                    if (config.checkerboardBiomeSource.possibleBiomes().isEmpty()) {
-                        // Select single biome
-                        Registry<Biome> biomeRegistry = dynamicRegistryManager.lookupOrThrow(Registries.BIOME);
-                        ResourceKey<Biome> biomeKey = null;
-                        if (dimensionOptionsRegistryKey == LevelStem.OVERWORLD) {
-                            biomeKey = Biomes.PLAINS;
-                        } else if (dimensionOptionsRegistryKey == LevelStem.NETHER) {
-                            biomeKey = Biomes.NETHER_WASTES;
-                        } else if (dimensionOptionsRegistryKey == LevelStem.END) {
-                            biomeKey = Biomes.THE_END;
-                        }
-                        Holder<Biome> biomeRegistryEntry = biomeRegistry.wrapAsHolder(biomeRegistry.getValue(biomeKey));
-                        config.checkerboardBiomeSource = new CheckerboardColumnBiomeSource(HolderSet.direct(biomeRegistryEntry), 1);
-                    }
-                    Holder<NoiseGeneratorSettings> chunkGeneratorSettingsRegistryEntry = chunkGeneratorSettingsRegistry.wrapAsHolder(chunkGeneratorSettingsRegistry.getValue(chunkGeneratorSettingsRegistryKey));
-                    ChunkGenerator chunkGenerator = new SkyGridChunkGenerator(chunkGeneratorSettingsRegistryEntry, config);
-                    LevelStem dimensionOptions = parent.getUiState().getSettings().selectedDimensions().dimensions().get(dimensionOptionsRegistryKey);
-
-                    Holder<DimensionType> dimensionTypeRegistryEntry = dimensionOptions.type();
-                    LevelStem newDimensionOptions = new LevelStem(dimensionTypeRegistryEntry, chunkGenerator);
-                    updatedDimensions.put(dimensionOptionsRegistryKey, newDimensionOptions);
-                } else {
-                    /*
-                    There is no non-zero weighted block, so we must use default generation for this dimension. If it's
-                    a vanilla dimension we must get it from a registry due to the fact that the default is overwritten by
-                    our world preset json file. However for modded dimensions, we can leave it as they will have not
-                    been overwritten by our world preset json
-                     */
-                    if (dimensionOptionsRegistryKey == LevelStem.OVERWORLD) {
-                        LevelStem defaultOverworld = (dynamicRegistryManager.lookupOrThrow(Registries.WORLD_PRESET).getValue(WorldPresets.NORMAL)).overworld().orElseThrow();
-                        updatedDimensions.put(dimensionOptionsRegistryKey, defaultOverworld);
-                    } else if (dimensionOptionsRegistryKey == LevelStem.NETHER) {
-                        WorldPreset preset = (dynamicRegistryManager.lookupOrThrow(Registries.WORLD_PRESET).getValue(WorldPresets.NORMAL));
-                        LevelStem defaultNether = ((WorldPresetExtension) preset).skygrid_reloaded$GetNether().orElseThrow();
-                        updatedDimensions.put(dimensionOptionsRegistryKey, defaultNether);
-                    } else if (dimensionOptionsRegistryKey == LevelStem.END) {
-                        WorldPreset preset = (dynamicRegistryManager.lookupOrThrow(Registries.WORLD_PRESET).getValue(WorldPresets.NORMAL));
-                        LevelStem defaultEnd = ((WorldPresetExtension) preset).skygrid_reloaded$GetEnd().orElseThrow();
-                        updatedDimensions.put(dimensionOptionsRegistryKey, defaultEnd);
-                    }
-
-                }
-            });
-            return new WorldDimensions(ImmutableMap.copyOf(updatedDimensions));
-        };
+        this.currentConfig = new SkyGridConfig(preset.config);
+        ensureAllDimensionsHaveConfigs();
     }
 
     public void onClose() {

@@ -49,12 +49,11 @@ public class SkyGridChunkGeneratorConfig {
         this.checkerboardBiomeSource = checkerboardBiomeSource;
     }
 
-    public SkyGridChunkGeneratorConfig(SkyGridChunkGeneratorConfig other) {
-        this(
-                new LinkedHashMap<>(other.blocks),
-                new LinkedHashSet<>(other.spawnerEntities),
-                new LinkedHashMap<>(other.chestItems),
-                new CheckerboardColumnBiomeSource(HolderSet.direct(other.checkerboardBiomeSource.possibleBiomes().stream().toList()), ((CheckerboardColumnBiomeSourceSizeAccessor) other.checkerboardBiomeSource).skygrid_reloaded$getSize())
-        );
+    public SkyGridChunkGeneratorConfig() {
+        this.blocks = new LinkedHashMap<>();
+        this.spawnerEntities = new LinkedHashSet<>();
+        this.chestItems = new LinkedHashMap<>();
+        // Provide a default CheckerboardColumnBiomeSource with empty biomes and size 1
+        this.checkerboardBiomeSource = new CheckerboardColumnBiomeSource(HolderSet.direct(), 1);
     }
 }

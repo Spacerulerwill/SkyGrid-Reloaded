@@ -1,3 +1,5 @@
+* Added support for modded dimensions.
+
 # 1.2.2-1.21.4-fabric - 25/03/25
 
 * Minor changes which should improve compatibility with other mods.
@@ -40,10 +42,10 @@
 # 1.0.0-1.21.4-fabric - 07/04/25 - Initial Release
 
 * Added SkyGrid world preset with:
-  * Customizable block weightings
-  * Customizable chest loot
-  * Customizable spawner entities
-  * User savable custom presets
+    * Customizable block weightings
+    * Customizable chest loot
+    * Customizable spawner entities
+    * User savable custom presets
 * Added 'Classic' Preset
 * Added 'Modern' Preset
 * Added 'Boom Preset'

@@ -1,5 +1,6 @@
 package net.spacerulerwill.skygrid_reloaded.worldgen;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
@@ -12,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.WorldGenRegion;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Instrument;
@@ -39,6 +41,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -56,7 +59,8 @@ import java.util.concurrent.CompletableFuture;
 public class SkyGridChunkGenerator extends ChunkGenerator {
     public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
-                    NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter((generator) -> generator.settings),
+                    Codec.INT.fieldOf("min_y").forGetter((generator) -> generator.minY),
+                    ExtraCodecs.NON_NEGATIVE_INT.fieldOf("height").forGetter((generator) -> generator.minY),
                     SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
             ).apply(instance, SkyGridChunkGenerator::new)
     );
@@ -74,13 +78,15 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     private final SkyGridChunkGeneratorConfig config;
     private final List<EntityType<?>> entities;
-    private final Holder<NoiseGeneratorSettings> settings;
+    private final int minY;
+    private final int height;
     private DiscreteProbabilityCollectionSampler<Block> blockProbabilities;
     private DiscreteProbabilityCollectionSampler<Item> chestItemProbabilities;
 
-    public SkyGridChunkGenerator(Holder<NoiseGeneratorSettings> settings, SkyGridChunkGeneratorConfig config) {
+    public SkyGridChunkGenerator(int minY, int height, SkyGridChunkGeneratorConfig config) {
         super(config.checkerboardBiomeSource);
-        this.settings = settings;
+        this.minY = minY;
+        this.height = height;
         this.config = config;
         this.blockProbabilities = new DiscreteProbabilityCollectionSampler<>(new MinecraftRandomAdapter(), config.blocks);
 
@@ -147,7 +153,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     // Max world height, how many blocks high from minimumY the chunks generate
     @Override
     public int getGenDepth() {
-        return this.settings.value().noiseSettings().height();
+        return this.height;
     }
 
     // No oceans in skygrid
@@ -159,7 +165,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     // Bottom of the world is here
     @Override
     public int getMinY() {
-        return this.settings.value().noiseSettings().minY();
+        return this.minY;
     }
 
     private void fillChestBlockEntityWithItems(RandomizableContainerBlockEntity blockEntity, RandomSource random, RegistryAccess dynamicRegistryManager) {

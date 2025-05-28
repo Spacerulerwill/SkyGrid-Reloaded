@@ -17,22 +17,12 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CustomizeSpawnerScreen extends DimensionSpecificCustomizableListWidgetScreen<CustomizeSpawnerScreen.EntityListWidgetEntry, EntityType<?>> {
-    public CustomizeSpawnerScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.spawners"), Component.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
+    public CustomizeSpawnerScreen(CustomizeSkyGridScreen parent, List<ResourceKey<LevelStem>> dimensions, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, dimensions, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.spawners"), Component.translatable("createWorld.customize.skygrid.spawners.placeholder"), 15);
     }
 
     private Set<EntityType<?>> getSpawnerEntities() {
-        Set<EntityType<?>> entities;
-        if (this.currentDimension == LevelStem.OVERWORLD) {
-            entities = this.currentConfig.overworldConfig().spawnerEntities;
-        } else if (this.currentDimension == LevelStem.NETHER) {
-            entities = this.currentConfig.netherConfig().spawnerEntities;
-        } else if (this.currentDimension == LevelStem.END) {
-            entities = this.currentConfig.endConfig().spawnerEntities;
-        } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
-        }
-        return entities;
+        return this.currentConfig.dimensions.get(this.currentDimension).spawnerEntities;
     }
 
     @Override
