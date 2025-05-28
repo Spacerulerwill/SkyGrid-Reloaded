@@ -1,3 +1,5 @@
+# 1.3.0-1.21.5-fabric - 28/03/05
+
 * Added support for modded dimensions.
 
 # 1.2.2-1.21.5-fabric - 25/03/25
