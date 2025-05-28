@@ -6,12 +6,30 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.Item;
 
-public record SkyGridPreset(Item item, String name, SkyGridConfig config) {
-    public static final Codec<SkyGridPreset> CODEC = RecordCodecBuilder.create(
+public class SkyGridPreset {
+    public final Item item;
+    public final String name;
+    public final SkyGridConfig config;
+
+    public SkyGridPreset(Item item, String name, SkyGridConfig config) {
+        this.item = item;
+        this.name = name;
+        this.config = config;
+    }
+
+    public static final Codec<SkyGridPreset> CODEC_V1 = RecordCodecBuilder.create(
             instance -> instance.group(
-                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(SkyGridPreset::item),
-                    ExtraCodecs.NON_EMPTY_STRING.fieldOf("name").forGetter(SkyGridPreset::name),
-                    SkyGridConfig.CODEC.fieldOf("config").forGetter(SkyGridPreset::config)
+                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(preset -> preset.item),
+                    ExtraCodecs.NON_EMPTY_STRING.fieldOf("name").forGetter(preset -> preset.name),
+                    SkyGridConfig.CODEC_V1.fieldOf("config").forGetter(preset -> preset.config)
+            ).apply(instance, SkyGridPreset::new)
+    );
+
+    public static final Codec<SkyGridPreset> CODEC_V2 = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    BuiltInRegistries.ITEM.byNameCodec().fieldOf("item").forGetter(preset -> preset.item),
+                    ExtraCodecs.NON_EMPTY_STRING.fieldOf("name").forGetter(preset -> preset.name),
+                    SkyGridConfig.CODEC_V2.fieldOf("config").forGetter(preset -> preset.config)
             ).apply(instance, SkyGridPreset::new)
     );
 }

@@ -1,3 +1,5 @@
+* Added support for modded dimensions.
+
 # 1.2.2-1.21.1-fabric 25/03/25
 
 * Minor changes which should improve compatibility with other mods.

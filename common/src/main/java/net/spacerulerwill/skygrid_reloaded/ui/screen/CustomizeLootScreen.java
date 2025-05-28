@@ -21,8 +21,8 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     private static final double MIN_ITEM_WEIGHT = 0;
     private static final double MAX_ITEM_WEIGHT = 100;
 
-    public CustomizeLootScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.loot"), Component.translatable("createWorld.customize.loot.placeholder"), 25);
+    public CustomizeLootScreen(CustomizeSkyGridScreen parent, List<ResourceKey<LevelStem>> dimensions, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, dimensions, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.loot"), Component.translatable("createWorld.customize.loot.placeholder"), 25);
     }
 
     @Override
@@ -81,17 +81,7 @@ public class CustomizeLootScreen extends DimensionSpecificCustomizableListWidget
     }
 
     private Map<Item, Double> getChestItems() {
-        Map<Item, Double> items;
-        if (this.currentDimension == LevelStem.OVERWORLD) {
-            items = this.currentConfig.overworldConfig().chestItems;
-        } else if (this.currentDimension == LevelStem.NETHER) {
-            items = this.currentConfig.netherConfig().chestItems;
-        } else if (this.currentDimension == LevelStem.END) {
-            items = this.currentConfig.endConfig().chestItems;
-        } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
-        }
-        return items;
+        return this.currentConfig.dimensions.get(this.currentDimension).chestItems;
     }
 
     @Override

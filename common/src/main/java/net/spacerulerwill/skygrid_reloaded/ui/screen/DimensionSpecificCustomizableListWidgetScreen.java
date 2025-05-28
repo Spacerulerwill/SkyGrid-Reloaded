@@ -9,6 +9,8 @@ import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationContext;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
@@ -25,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.spacerulerwill.skygrid_reloaded.ui.screen.CustomizeSkyGridScreen.DIMENSIONS;
 
 
 /// A screen that will allow you to adjust dimension specific SkyGrid features via a ListWidget
@@ -39,6 +40,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Ob
     protected ListWidget listWidget;
     protected SearchTextField textField;
     protected ResourceKey<LevelStem> currentDimension;
+    private final List<ResourceKey<LevelStem>> dimensions;
     protected SkyGridConfig currentConfig;
     private Button addButton;
     private Button deleteButton;
@@ -46,15 +48,15 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Ob
     private Button doneButton;
     private Button cancelButton;
 
-    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig, Component title, Component textFieldPlaceholder, int entryHeight) {
+    public DimensionSpecificCustomizableListWidgetScreen(CustomizeSkyGridScreen parent, List<ResourceKey<LevelStem>> dimensions, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig, Component title, Component textFieldPlaceholder, int entryHeight) {
         super(title);
         this.title = title;
         this.textFieldPlaceholder = textFieldPlaceholder;
         this.entryHeight = entryHeight;
         this.parent = parent;
-        this.currentDimension = LevelStem.OVERWORLD;
         this.currentConfig = new SkyGridConfig(currentConfig);
         this.currentDimension = initialDimension;
+        this.dimensions = dimensions;
     }
 
     private void initHeader() {
@@ -85,7 +87,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Ob
         // Row 2 - Dimension selector and Delete button
         LinearLayout row2 = LinearLayout.horizontal().spacing(8);
         this.dimensionsSelector = row2.addChild(new CycleButton.Builder<ResourceKey<LevelStem>>(value -> Component.translatable(value.location().toLanguageKey()))
-                .withValues(DIMENSIONS)
+                .withValues(this.dimensions)
                 .withInitialValue(this.currentDimension)
                 .create(0, 0, 158, 20, Component.translatable("createWorld.customize.skygrid.dimension"), ((button, dimension) -> {
                     this.currentDimension = dimension;

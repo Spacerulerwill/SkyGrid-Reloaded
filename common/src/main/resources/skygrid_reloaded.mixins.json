@@ -7,8 +7,9 @@
   "mixins": [],
   "client": [
     "CheckerboardColumnBiomeSourceMixin",
-    "WorldPresetMixin",
-    "WorldCreationUiStateMixin"
+    "CreateWorldScreenMixin",
+    "WorldCreationUiStateMixin",
+    "WorldPresetMixin"
   ],
   "server": [],
   "injectors": {

@@ -4,7 +4,8 @@
       "type": "minecraft:overworld",
       "generator": {
         "type": "skygrid_reloaded:skygrid",
-        "settings": "minecraft:overworld",
+        "min_y": -64,
+        "height": 384,
         "skygrid_settings": {
           "blocks": {
             "minecraft:stone": 277.77777777777777,
@@ -488,7 +489,8 @@
       "type": "minecraft:the_nether",
       "generator": {
         "type": "skygrid_reloaded:skygrid",
-        "settings": "minecraft:nether",
+        "min_y": 0,
+        "height": 128,
         "skygrid_settings": {
           "blocks": {
             "minecraft:lava": 125.0,

@@ -23,8 +23,8 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     private static final double MIN_BLOCK_WEIGHT = 0;
     private static final double MAX_BLOCK_WEIGHT = 500;
 
-    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
-        super(parent, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.blocks"), Component.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
+    public CustomizeBlocksScreen(CustomizeSkyGridScreen parent, List<ResourceKey<LevelStem>> dimensions, ResourceKey<LevelStem> initialDimension, SkyGridConfig currentConfig) {
+        super(parent, dimensions, initialDimension, currentConfig, Component.translatable("createWorld.customize.skygrid.blocks"), Component.translatable("createWorld.customize.skygrid.blocks.placeholder"), 25);
     }
 
     private static Item getBlockItem(Block block) {
@@ -90,17 +90,7 @@ public class CustomizeBlocksScreen extends DimensionSpecificCustomizableListWidg
     }
 
     private Map<Block, Double> getCurrentBlocks() {
-        Map<Block, Double> blocks;
-        if (this.currentDimension == LevelStem.OVERWORLD) {
-            blocks = this.currentConfig.overworldConfig().blocks;
-        } else if (this.currentDimension == LevelStem.NETHER) {
-            blocks = this.currentConfig.netherConfig().blocks;
-        } else if (this.currentDimension == LevelStem.END) {
-            blocks = this.currentConfig.endConfig().blocks;
-        } else {
-            throw new IllegalStateException("Current dimension is not one of overworld, nether or end: " + this.currentDimension.location().toLanguageKey());
-        }
-        return blocks;
+        return this.currentConfig.dimensions.get(this.currentDimension).blocks;
     }
 
     @Override

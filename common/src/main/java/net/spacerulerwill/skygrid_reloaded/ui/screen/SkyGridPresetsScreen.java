@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -19,10 +18,12 @@ import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.spacerulerwill.skygrid_reloaded.Common;
 import net.spacerulerwill.skygrid_reloaded.Constants;
 import net.spacerulerwill.skygrid_reloaded.platform.Services;
 import net.spacerulerwill.skygrid_reloaded.ui.widget.TextField;
+import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridChunkGeneratorConfig;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridConfig;
 import net.spacerulerwill.skygrid_reloaded.worldgen.SkyGridPreset;
 import org.apache.commons.codec.binary.Hex;
@@ -78,7 +79,7 @@ public class SkyGridPresetsScreen extends Screen {
         this.layout.addToFooter(rows);
         this.layout.visitWidgets(this::addRenderableWidget);
         this.updateSelectPresetButtonActive();
-        this.refreshWidgetPositions();
+        this.repositionElements();
         this.updateSaveButtonActive();
     }
 
@@ -86,7 +87,7 @@ public class SkyGridPresetsScreen extends Screen {
         this.savePresetButton.active = !this.textField.getValue().isEmpty();
     }
 
-    protected void refreshWidgetPositions() {
+    protected void repositionElements() {
         if (this.listWidget != null) {
             this.listWidget.updateSize(this.width, this.layout);
         }
@@ -115,25 +116,28 @@ public class SkyGridPresetsScreen extends Screen {
             int maxWeight = 0;
             // Should be better
             List<Item> allItems = new ArrayList<>();
-            currentConfig.overworldConfig().blocks.keySet().stream()
+            SkyGridChunkGeneratorConfig overworldConfig = currentConfig.dimensions.get(LevelStem.OVERWORLD);
+            overworldConfig.blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
-            currentConfig.netherConfig().blocks.keySet().stream()
+            allItems.addAll(overworldConfig.chestItems.keySet());
+            SkyGridChunkGeneratorConfig netherConfig = currentConfig.dimensions.get(LevelStem.NETHER);
+            netherConfig.blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
-            currentConfig.endConfig().blocks.keySet().stream()
+            allItems.addAll(netherConfig.chestItems.keySet());
+            SkyGridChunkGeneratorConfig endConfig = currentConfig.dimensions.get(LevelStem.END);
+            endConfig.blocks.keySet().stream()
                     .map(Block::asItem)
                     .forEach(allItems::add);
-            allItems.addAll(currentConfig.overworldConfig().chestItems.keySet());
+            allItems.addAll(endConfig.chestItems.keySet());
             Random random = new Random();
             Item icon = allItems.get(random.nextInt(allItems.size()));
             SkyGridPreset preset = new SkyGridPreset(icon, name, currentConfig);
             // Encode it as json
             JsonElement element = new JsonObject();
             DynamicOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, this.dynamicRegistryManager);
-            DataResult<JsonElement> json = SkyGridPreset.CODEC.encode(preset, ops, element);
+            DataResult<JsonElement> json = SkyGridPreset.CODEC_V2.encode(preset, ops, element);
             String jsonString = json.getOrThrow().toString();
             // Write json to file
             String fileName = Services.PLATFORM.getConfigPath().toString() + "/" + Constants.MOD_ID + "/" + hashedName + ".json";
@@ -186,8 +190,8 @@ public class SkyGridPresetsScreen extends Screen {
             @Override
             public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
                 context.blitSprite(SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
-                context.renderFakeItem(preset.item().getDefaultInstance(), x + 2, y + 2);
-                context.drawString(SkyGridPresetsScreen.this.font, Component.translatable(preset.name()), x + 18 + 5, y + 3, 16777215, false);
+                context.renderFakeItem(preset.item.getDefaultInstance(), x + 2, y + 2);
+                context.drawString(SkyGridPresetsScreen.this.font, Component.translatable(preset.name), x + 18 + 5, y + 3, 16777215, false);
             }
         }
 
@@ -199,7 +203,7 @@ public class SkyGridPresetsScreen extends Screen {
                 this.deleteButton = Button.builder(Component.translatable("createWorld.skygrid.customize.presets.delete"), button -> {
                     try {
                         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                        byte[] hash = digest.digest(preset.name().getBytes(StandardCharsets.UTF_8));
+                        byte[] hash = digest.digest(preset.name.getBytes(StandardCharsets.UTF_8));
                         String hashedName = Hex.encodeHexString(hash);
                         String fileName = Services.PLATFORM.getConfigPath().toString() + "/" + Constants.MOD_ID + "/" + hashedName + ".json";
                         File file = new File(fileName);

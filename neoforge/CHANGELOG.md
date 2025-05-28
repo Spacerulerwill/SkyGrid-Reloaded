@@ -1,3 +1,5 @@
+* Added support for modded dimensions.
+
 # 1.2.2-1.21.1-neoforge - 25/03/25
 
 * Ported from **1.2.2-1.21.1-fabric** to **1.2.2-1.21.1-neoforge**
