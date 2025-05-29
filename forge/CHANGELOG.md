@@ -1,11 +1,13 @@
+# 1.3.0-1.21.1-forge - 29/05/25
+
 * Added support for modded dimensions.
 
-# 1.2.2-1.21.1-forge - 25/03/25
+# 1.2.2-1.21.1-forge - 25/05/25
 
 * Ported from **1.2.2-1.21.1-fabric** to **1.2.2-1.21.1-forge**
 * Change logo.
 
-# 1.2.2-1.21.1-fabric - 25/03/25
+# 1.2.2-1.21.1-fabric - 25/05/25
 
 * Minor changes which should improve compatibility with other mods.
 
