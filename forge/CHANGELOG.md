@@ -1,3 +1,5 @@
+# 1.3.0-1.21.4-forge - 29/03/25
+
 * Added support for modded dimensions.
 
 # 1.2.2-1.21.4-forge - 25/03/25

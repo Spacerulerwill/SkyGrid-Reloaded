@@ -1,3 +1,5 @@
+# 1.3.0-1.21.4-neoforge - 29/03/25
+
 * Added support for modded dimensions.
 
 # 1.2.2-1.21.4-neoforge - 25/03/25
