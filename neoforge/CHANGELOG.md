@@ -2,12 +2,12 @@
 
 * Added support for modded dimensions.
 
-# 1.2.2-1.21.4-neoforge - 25/03/25
+# 1.2.2-1.21.4-neoforge - 25/05/25
 
 * Ported from **1.2.2-1.21.4-fabric** to **1.2.2-1.21.4-neoforge**
 * Change logo.
 
-# 1.2.2-1.21.4-fabric - 25/03/25
+# 1.2.2-1.21.4-fabric - 25/05/25
 
 * Minor changes which should improve compatibility with other mods.
 

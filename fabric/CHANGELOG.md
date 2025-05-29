@@ -1,8 +1,8 @@
-# 1.3.0-1.21.4-fabric - 29/03/25
+# 1.3.0-1.21.4-fabric - 29/05/25
 
 * Added support for modded dimensions.
 
-# 1.2.2-1.21.4-fabric - 25/03/25
+# 1.2.2-1.21.4-fabric - 25/05/25
 
 * Minor changes which should improve compatibility with other mods.
 
