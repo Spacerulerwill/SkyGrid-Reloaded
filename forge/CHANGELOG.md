@@ -1,3 +1,7 @@
+# 1.3.1.-1.21.5-forge - 30/05/25
+
+* Fix bug where world would corrupt after saving.
+
 # 1.3.0-1.21.5-forge - 28/05/05
 
 * Added support for modded dimensions.
