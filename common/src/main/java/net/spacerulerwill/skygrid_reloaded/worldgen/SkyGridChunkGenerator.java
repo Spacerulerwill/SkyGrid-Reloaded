@@ -61,7 +61,7 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
     public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     Codec.INT.fieldOf("min_y").forGetter((generator) -> generator.minY),
-                    ExtraCodecs.NON_NEGATIVE_INT.fieldOf("height").forGetter((generator) -> generator.minY),
+                    ExtraCodecs.NON_NEGATIVE_INT.fieldOf("height").forGetter((generator) -> generator.height),
                     SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
             ).apply(instance, SkyGridChunkGenerator::new)
     );
