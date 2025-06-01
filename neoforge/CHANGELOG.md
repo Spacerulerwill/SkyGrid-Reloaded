@@ -1,3 +1,5 @@
+* Worlds generated from 1.2.x can now be loaded.
+
 # 1.3.1.-1.21.5-neoforge - 30/05/25
 
 * Fix bug where world would corrupt after saving.
