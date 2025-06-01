@@ -1,7 +1,11 @@
 package net.spacerulerwill.skygrid_reloaded.worldgen;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.MapLike;
+import com.mojang.serialization.RecordBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -42,7 +46,6 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
-import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
@@ -56,9 +59,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class SkyGridChunkGenerator extends ChunkGenerator {
-    public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
+    public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC_V2 = RecordCodecBuilder.mapCodec(instance ->
+            instance.group(
+                    NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter(generator -> {
+                        throw new UnsupportedOperationException("This generator does not store settings directly.");
+                    }),
+                    SkyGridChunkGeneratorConfig.CODEC.fieldOf("skygrid_settings").forGetter(SkyGridChunkGenerator::getConfig)
+            ).apply(instance, (settings, config) -> {
+                int minY = settings.value().noiseSettings().minY();
+                int height = settings.value().noiseSettings().height();
+                return new SkyGridChunkGenerator(minY, height, config);
+            })
+    );
+
+    public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC_V3 = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     Codec.INT.fieldOf("min_y").forGetter((generator) -> generator.minY),
                     ExtraCodecs.NON_NEGATIVE_INT.fieldOf("height").forGetter((generator) -> generator.height),
@@ -66,8 +83,36 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
             ).apply(instance, SkyGridChunkGenerator::new)
     );
 
-    public static final int MAX_BOOK_ENCHANTS = 5;
 
+    public static final MapCodec<SkyGridChunkGenerator> MAP_CODEC = new MapCodec<>() {
+        @Override
+        public <T> Stream<T> keys(DynamicOps<T> ops) {
+            return Stream.concat(
+                    MAP_CODEC_V3.keys(ops),
+                    MAP_CODEC_V2.keys(ops)
+            ).distinct();
+        }
+
+
+        @Override
+        public <T> DataResult<SkyGridChunkGenerator> decode(DynamicOps<T> ops, MapLike<T> input) {
+            // Try decoding with latest codec first
+            DataResult<SkyGridChunkGenerator> result = MAP_CODEC_V3.decode(ops, input);
+            if (result.error().isPresent()) {
+                result = MAP_CODEC_V2.decode(ops, input);
+            }
+            return result;
+        }
+
+        @Override
+        public <T> RecordBuilder<T> encode(SkyGridChunkGenerator input, DynamicOps<T> ops, RecordBuilder<T> prefix) {
+            // Always encode using latest codec version
+            return MAP_CODEC_V3.encode(input, ops, prefix);
+        }
+    };
+
+
+    public static final int MAX_BOOK_ENCHANTS = 5;
     public static final List<ResourceKey<LootTable>> ARCHEOLOGY_LOOT_TABLES = Arrays.asList(
             BuiltInLootTables.DESERT_PYRAMID_ARCHAEOLOGY,
             BuiltInLootTables.DESERT_WELL_ARCHAEOLOGY,
