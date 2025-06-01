@@ -1,6 +1,8 @@
+# 1.3.2-1.21.1-fabric - 01/06/25
+
 * Worlds generated from 1.2.x can now be loaded.
 
-# 1.3.1.-1.21.1-fabric 30/05/25
+# 1.3.1.-1.21.1-fabric - 30/05/25
 
 * Fix bug where world would corrupt after saving.
 
