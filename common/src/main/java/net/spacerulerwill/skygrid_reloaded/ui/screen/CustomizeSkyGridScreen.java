@@ -146,17 +146,14 @@ public class CustomizeSkyGridScreen extends Screen {
     }
 
     private List<ResourceKey<LevelStem>> getAllDimensions() {
-        List<ResourceKey<LevelStem>> result = new ArrayList<>();
         WorldCreationContext worldCreationContext = parent.getUiState().getSettings();
 
-        // Add selected dimensions first, unsorted
-        worldCreationContext.selectedDimensions().dimensions().forEach((levelStemResourceKey, levelStem) -> {
-            result.add(levelStemResourceKey);
-        });
+        // Add vanilla dimensions first
+        List<ResourceKey<LevelStem>> result = new ArrayList<>(VANILLA_DIMENSIONS);
 
         // Get datapack dimensions, sort them alphabetically, then add
         List<ResourceKey<LevelStem>> datapackDims = new ArrayList<>(worldCreationContext.datapackDimensions().registryKeySet());
-        datapackDims.sort(Comparator.comparing(key -> key.toString()));
+        datapackDims.sort(Comparator.comparing(ResourceKey::toString));
 
         result.addAll(datapackDims);
 
