@@ -170,6 +170,7 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Ob
 
     public void onClose() {
         if (this.minecraft != null) {
+            this.parent.updateButtonStatuses();
             this.minecraft.setScreen(this.parent);
         }
     }

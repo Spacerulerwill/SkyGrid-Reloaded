@@ -2,12 +2,16 @@ package net.spacerulerwill.skygrid_reloaded.worldgen;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.biome.CheckerboardColumnBiomeSource;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.spacerulerwill.skygrid_reloaded.util.CheckerboardColumnBiomeSourceSizeAccessor;
 
 import java.util.ArrayList;
@@ -55,5 +59,22 @@ public class SkyGridChunkGeneratorConfig {
         this.chestItems = new LinkedHashMap<>();
         // Provide a default CheckerboardColumnBiomeSource with empty biomes and size 1
         this.checkerboardBiomeSource = new CheckerboardColumnBiomeSource(HolderSet.direct(), 1);
+    }
+
+    public boolean hasSkygrid() {
+        return this.blocks.values().stream().anyMatch(weight -> weight > 0);
+    }
+
+    public boolean hasContainerBlock() {
+        return this.blocks.entrySet().stream().anyMatch(entry -> {
+            Block block = entry.getKey();
+            Double value = entry.getValue();
+            BlockPos pos = new BlockPos(0, 0, 0);
+            return value > 0.0 && block instanceof EntityBlock entityBlock && entityBlock.newBlockEntity(pos, block.defaultBlockState()) instanceof RandomizableContainerBlockEntity;
+        });
+    }
+
+    public boolean hasMobSpawner() {
+        return this.blocks.containsKey(Blocks.SPAWNER) && this.blocks.get(Blocks.SPAWNER) > 0.0;
     }
 }

@@ -65,9 +65,11 @@ public class SkyGridPresetsScreen extends Screen {
             SkyGridPresetListWidget.SkyGridPresetEntry entry = this.listWidget.getSelected();
             this.parent.setConfigFromPreset(entry.preset);
             this.parent.updateBiomeScaleSlider();
+            this.parent.updateButtonStatuses();
             this.minecraft.setScreen(this.parent);
         }).build());
         row1.addChild(Button.builder(CommonComponents.GUI_CANCEL, (button) -> {
+            this.parent.updateButtonStatuses();
             this.minecraft.setScreen(this.parent);
         }).build());
         rows.addChild(row1);

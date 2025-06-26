@@ -1,3 +1,5 @@
+* Buttons on the customize SkyGrid menu screen will disable themselves and have tooltips if not needed (for example, the customize spawners button will be disabled if you do not have a spawner block in your SkyGrid)
+
 # 1.3.2-1.21.5-fabric - 01/06/25
 
 * Worlds generated from 1.2.x can now be loaded.

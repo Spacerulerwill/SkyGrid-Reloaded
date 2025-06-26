@@ -19,6 +19,9 @@
   "createWorld.skygrid.customize.presets.select": "Select Preset",
   "createWorld.skygrid.customize.presets.save": "Save Preset",
   "createWorld.skygrid.customize.presets.delete": "Delete",
+  "createWorld.skygrid.customize.tooltip.no_skygrid": "Your SkyGrid contains no blocks.",
+  "createWorld.skygrid.customize.tooltip.no_container_block": "Your SkyGrid contains no container blocks.",
+  "createWorld.skygrid.customize.tooltip.no_mob_spawner": "Your SkyGrid doesn't container a mob spawner.",
   "minecraft.overworld": "The Overworld",
   "minecraft.the_nether": "The Nether",
   "minecraft.the_end": "The End"
