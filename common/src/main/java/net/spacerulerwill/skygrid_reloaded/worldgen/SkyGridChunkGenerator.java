@@ -168,19 +168,12 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
         return config;
     }
 
-    /*
-    Empty methods - irrelevant for now
-     */
-    @Override
-    public void applyBiomeDecoration(WorldGenLevel world, ChunkAccess chunk, StructureManager structureAccessor) {
-    }
-
     @Override
     public void buildSurface(WorldGenRegion region, StructureManager structures, RandomState noiseConfig, ChunkAccess chunk) {
     }
 
     @Override
-    public void spawnOriginalMobs(WorldGenRegion region) {
+    public void spawnOriginalMobs(WorldGenRegion worldGenRegion) {
     }
 
     @Override
@@ -189,11 +182,11 @@ public class SkyGridChunkGenerator extends ChunkGenerator {
 
     /*
     Used for getting the max block height of any given column in the terrain. Used for structure generation.
-    We have no structures so is irrelevant for now - a zero value is fine.
      */
     @Override
     public int getBaseHeight(int x, int z, Heightmap.Types heightmap, LevelHeightAccessor world, RandomState noiseConfig) {
-        return 0;
+        RandomSource random = getRandomForChunk(noiseConfig, x >> 4, z >> 4);
+        return random.nextIntBetweenInclusive(this.getMinY(), this.getMinY() + this.getGenDepth() - 1);
     }
 
     // Max world height, how many blocks high from minimumY the chunks generate

@@ -1,4 +1,5 @@
-* Buttons on the customize SkyGrid menu screen will disable themselves and have tooltips if not needed (for example, the customize spawners button will be disabled if you do not have a spawner block in your SkyGrid)
+* Re-enabled structure and feature generation: [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/15)
+* Buttons on the customize SkyGrid menu screen will disable themselves and have tooltips if not needed (for example, the customize spawners button will be disabled if you do not have a spawner block in your SkyGrid): [Issue](https://github.com/Spacerulerwill/SkyGrid-Reloaded/issues/14)
 
 # 1.3.2-1.21.5-forge - 01/06/25
 
