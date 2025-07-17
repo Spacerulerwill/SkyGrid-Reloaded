@@ -11,7 +11,7 @@ configurations {
     implementation.extendsFrom includedLibrary
 }
 base {
-    archivesName = "${mod_id}-${forge_mod_version}-${minecraft_version}-forge"
+    archivesName = "${mod_id}-${forge_mod_version}-${minecraft_version}+-forge"
 }
 mixin {
     config("${mod_id}.mixins.json")

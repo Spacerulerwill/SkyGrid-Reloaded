@@ -297,10 +297,10 @@ public abstract class DimensionSpecificCustomizableListWidgetScreen<T extends Ob
             @Override
             public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
                 if (this.iconItem == null) {
-                    context.drawString(this.textRenderer, this.displayText, x + 5, y + 5, 16777215, false);
+                    context.drawString(this.textRenderer, this.displayText, x + 5, y + 5, 0xFFFFFFFF, false);
                 } else {
                     RenderUtils.renderItemIcon(this.iconItem, context, x, y);
-                    context.drawString(this.textRenderer, this.displayText, x + 18 + 5, y + 5, 16777215, false);
+                    context.drawString(this.textRenderer, this.displayText, x + 18 + 5, y + 5, 0xFFFFFFFF, false);
                 }
             }
         }

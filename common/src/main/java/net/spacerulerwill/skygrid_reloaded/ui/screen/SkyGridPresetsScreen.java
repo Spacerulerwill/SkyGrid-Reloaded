@@ -11,7 +11,9 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
 import net.minecraft.client.gui.layouts.LinearLayout;
+import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.chat.CommonComponents;
@@ -191,9 +193,9 @@ public class SkyGridPresetsScreen extends Screen {
 
             @Override
             public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-                context.blitSprite(RenderType::guiTextured, SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
+                context.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_TEXTURE, x + 1, y + 1, 0, 18, 18);
                 context.renderFakeItem(preset.item.getDefaultInstance(), x + 2, y + 2);
-                context.drawString(SkyGridPresetsScreen.this.font, Component.translatable(preset.name), x + 18 + 5, y + 3, 16777215, false);
+                context.drawString(SkyGridPresetsScreen.this.font, Component.translatable(preset.name), x + 18 + 5, y + 3, 0xFFFFFFFF);
             }
         }
 

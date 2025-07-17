@@ -8,7 +8,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -25,28 +25,26 @@ public class SkyGridReloaded {
 
     public SkyGridReloaded(FMLJavaModLoadingContext context) {
         CHUNK_GENERATORS.register("skygrid", () -> SkyGridChunkGenerator.MAP_CODEC);
-        CHUNK_GENERATORS.register(context.getModEventBus());
-        MinecraftForge.EVENT_BUS.register(EventHandler.class);
+        CHUNK_GENERATORS.register(context.getModBusGroup());
+        AddReloadListenerEvent.BUS.addListener(this::onAddReloadListeners);
         Constants.LOGGER.info("SkyGrid Reloaded is loaded!");
     }
 
-    private static class EventHandler {
-        @SubscribeEvent
-        public static void reload(AddReloadListenerEvent event) {
-            HolderLookup.Provider wrapperLookup = event.getRegistries();
-            event.addListener(new PreparableReloadListener() {
-                @Override
-                public @NotNull CompletableFuture<Void> reload(
-                        @NotNull PreparationBarrier preparationBarrier,
-                        @NotNull ResourceManager resourceManager,
-                        @NotNull Executor backgroundExecutor,
-                        @NotNull Executor gameExecutor) {
+    private void onAddReloadListeners(AddReloadListenerEvent event) {
+        HolderLookup.Provider wrapperLookup = event.getRegistries();
 
-                    return CompletableFuture.runAsync(() -> {
-                        Common.onResourceManagerReload(wrapperLookup, resourceManager);
-                    }, backgroundExecutor).thenCompose(preparationBarrier::wait);
-                }
-            });
-        }
+        event.addListener(new PreparableReloadListener() {
+            @Override
+            public @NotNull CompletableFuture<Void> reload(
+                    @NotNull PreparationBarrier preparationBarrier,
+                    @NotNull ResourceManager resourceManager,
+                    @NotNull Executor backgroundExecutor,
+                    @NotNull Executor gameExecutor) {
+
+                return CompletableFuture.runAsync(() -> {
+                    Common.onResourceManagerReload(wrapperLookup, resourceManager);
+                }, backgroundExecutor).thenCompose(preparationBarrier::wait);
+            }
+        });
     }
 }

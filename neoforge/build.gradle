@@ -5,16 +5,13 @@ plugins {
 }
 
 base {
-    archivesName = "${mod_id}-${neoforge_mod_version}-${minecraft_version}-neoforge"
+    archivesName = "${mod_id}-${neoforge_mod_version}-${minecraft_version}+-neoforge"
 }
 
 dependencies {
     // This is still required to add the library in your jar and at compile time.
     jarJar(implementation("org.apache.commons:commons-rng-sampling:1.6")) {}
     jarJar(implementation("org.apache.commons:commons-rng-client-api:1.6")) {}
-
-    additionalRuntimeClasspath "org.apache.commons:commons-rng-sampling:1.6"
-    additionalRuntimeClasspath "org.apache.commons:commons-rng-client-api:1.6"
 }
 
 neoForge {

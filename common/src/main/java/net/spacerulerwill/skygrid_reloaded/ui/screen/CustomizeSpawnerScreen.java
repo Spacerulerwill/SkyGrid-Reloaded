@@ -101,7 +101,7 @@ public class CustomizeSpawnerScreen extends DimensionSpecificCustomizableListWid
 
         @Override
         public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            context.drawString(CustomizeSpawnerScreen.this.font, this.entityType.getDescription(), x + 3, y + 2, 16777215, false);
+            context.drawString(CustomizeSpawnerScreen.this.font, this.entityType.getDescription(), x + 3, y + 2, 0xFFFFFFFF, false);
         }
     }
 }

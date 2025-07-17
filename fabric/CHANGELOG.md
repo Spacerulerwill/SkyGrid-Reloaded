@@ -1,3 +1,9 @@
+# 1.3.2-1.21.6+-fabric - 17/07/25
+
+* Ported from **1.3.2-1.21.5-fabric** to **1.3.2-1.21.6+-fabric**.
+* Added the "tears" music disc to the overworld's chest loot for the **modern** and **default** preset.
+* Added the dried ghast block and bone block to the nether's block pool for the **modern** preset and **default** preset.
+
 # 1.3.2-1.21.5-fabric - 01/06/25
 
 * Worlds generated from 1.2.x can now be loaded.

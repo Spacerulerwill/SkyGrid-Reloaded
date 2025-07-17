@@ -1,6 +1,8 @@
 package net.spacerulerwill.skygrid_reloaded.ui.util;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.PresetFlatWorldScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -10,7 +12,7 @@ public class RenderUtils {
     private static final ResourceLocation SLOT_TEXTURE = ResourceLocation.withDefaultNamespace("container/slot");
 
     private static void renderIconBackgroundTexture(GuiGraphics context, int x, int y) {
-        context.blitSprite(RenderType::guiTextured, SLOT_TEXTURE, x, y, 18, 18);
+        context.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_TEXTURE, x, y, 18, 18);
     }
 
     public static void renderItemIcon(Item item, GuiGraphics context, int x, int y) {

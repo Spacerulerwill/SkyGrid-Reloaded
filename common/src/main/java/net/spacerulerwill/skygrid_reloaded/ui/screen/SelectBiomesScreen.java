@@ -134,7 +134,7 @@ public class SelectBiomesScreen extends DimensionSpecificCustomizableListWidgetS
         @Override
         public void render(GuiGraphics context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             String key = this.biome.unwrapKey().get().location().toLanguageKey("biome");
-            context.drawString(SelectBiomesScreen.this.font, Component.translatable(key), x + 3, y + 2, 16777215, false);
+            context.drawString(SelectBiomesScreen.this.font, Component.translatable(key), x + 3, y + 2, 0xFFFFFFFF, false);
         }
     }
 }
